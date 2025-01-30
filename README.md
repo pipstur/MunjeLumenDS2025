@@ -27,13 +27,13 @@ Example:
 ```bash
 git push origin vojislav/initial-setup
 ```
-3. CI/CD runs status checks (linting, tests, etc).
-4. Code is reviewed and approved.
+4. CI/CD runs status checks (linting, tests, etc).
+5. Code is reviewed and approved.
 - This is important because the developers need to be up to date with what is being done on the project.
-5. The PR is merged using rebase and fast-forward, keeping a linear history.
+6. The PR is merged using rebase and fast-forward, keeping a linear history. When merging the pull request, you should select the option to `squash and merge`.
 - The source branch will be deleted when merged.
-6. No merge commits, ensuring a clean Git history.
-7. When you are finished, to update the remote repo with your own:
+7. No merge commits, ensuring a clean Git history.
+8. When you are finished, to update the remote repo with your own:
 ```bash
 git checkout main
 git fetch --prune
