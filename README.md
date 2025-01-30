@@ -11,11 +11,11 @@ Example:
 git checkout -b vojislav/initial-setup
 ```
 2. Developers commit to this branch in the following manner:
-```bash 
+```bash
 git commit -m "action: short description"
 ```
 Example:
-```bash 
+```bash
 git commit -m "add: initial infrastructure for the project"
 ```
 The actions that should generally be used are: `add`, `update`, `fix`.
@@ -40,6 +40,10 @@ git fetch --prune
 git pull --rebase
 ```
 
+General adding, committing tips:
+- Use `git status` a lot to see what you're working with.
+- Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
+
 ## Repository setup
 
 ### Virtual environment setup
@@ -59,5 +63,13 @@ Creating a virtual environment requires a certain version of Python, we'll work 
 Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### Installing dependencies
-Run the following command:
-`pip install -r requirements.txt`
+1. Pre-commit install for local linting (flake8, black, isort):
+```bash
+pip install pre-commit==2.13
+pre-commit install
+```
+
+2. For the requirements, run the following command:
+```bash
+pip install -r requirements.txt
+```
