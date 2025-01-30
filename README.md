@@ -44,6 +44,15 @@ General adding, committing tips:
 - Use `git status` a lot to see what you're working with.
 - Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
 
+## Visual Studio Code setup
+I suggest installing the following extensions, and configuring them in the settings:
+- Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
+- Flake8, then go into VS Code settings > Search for Flake8 > For `Flake8: Import Strategy` put `fromEnvironment`.
+- isort, then go into VS Code settings > Search for Flake8 > For `isort: Import Strategy` put `fromEnvironment`.
+- Python Extension Pack is good too.
+- RainbowCSV for easier viewing of `.csv` files.
+- vscode-pdf for easier viewing of `.pdf` files.
+
 ## Repository setup
 
 ### Virtual environment setup
