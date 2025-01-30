@@ -1,7 +1,7 @@
 # Project based ignore
-data/
-runs/
-results/
+data/*
+runs/*
+results/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
