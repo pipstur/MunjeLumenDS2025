@@ -2,7 +2,7 @@ name: CI Checks
 
 on:
   pull_request:
-    branches: [main]  # Runs on merge requests to main branch
+    branches: [main]  # Runs on merge requests to the main branch
 
 jobs:
   checks:
@@ -20,13 +20,12 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip install black flake8 isort
+          pip install pre-commit
 
-      - name: Run Linter (flake8)
-        run: flake8 .
+      - name: Install Pre-commit Hooks
+        run: |
+          pre-commit install
 
-      - name: Run Formatter Check (black)
-        run: black --check .
-      
-      - name: Run Import Sorter Check (isort)
-        run: isort --check .
+      - name: Run Pre-commit Checks
+        run: |
+          pre-commit run --all-files
