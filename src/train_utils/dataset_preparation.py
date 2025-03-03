@@ -1,12 +1,13 @@
-import os
 import argparse
+import os
+import random
+import shutil
+from multiprocessing import Pool, cpu_count
+from typing import List, Tuple
+
 import pandas as pd
 from PIL import Image
-import shutil
-import random
 from tqdm import tqdm
-from multiprocessing import Pool, cpu_count
-from typing import Tuple, List
 
 
 def process_image(args: Tuple[str, str, Tuple[int, int]]) -> None:
