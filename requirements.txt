@@ -1,1 +1,10 @@
-numpy
+numpy==2.2.2
+pandas==2.2.3
+matplotlib==3.10.0
+torch==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+torchvision==0.21.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+torchaudio==2.6.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+scikit-learn==1.6.1
+torchsampler==0.1.2
+tqdm==4.67.1
+pillow==11.0.0
