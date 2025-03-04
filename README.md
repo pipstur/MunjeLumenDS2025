@@ -53,7 +53,7 @@ I suggest installing the following extensions, and configuring them in the setti
 - RainbowCSV for easier viewing of `.csv` files.
 - vscode-pdf for easier viewing of `.pdf` files.
 
-## Repository setup
+## 1. Repository setup
 
 ### Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
@@ -81,4 +81,39 @@ pre-commit install
 2. For the requirements, run the following command:
 ```bash
 pip install -r requirements.txt
+```
+
+
+## 2. Dataset preparation
+
+```bash
+usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--seed SEED]
+                              [--overwrite]
+
+Resize images and split dataset.
+
+options:
+  -h, --help            show this help message and exit
+  --csv-path CSV_PATH   Path to the CSV file with labels.
+  --images-dir IMAGES_DIR
+                        Directory containing input images.
+  --output-dir OUTPUT_DIR
+                        Directory to save resized images.
+  --image-size IMAGE_SIZE IMAGE_SIZE
+                        Target image size (width height). Default: 224x224
+  --val-split VAL_SPLIT
+                        Fraction of data for validation (default: 0.2)
+  --seed SEED           Random seed for dataset split (default: 27)
+  --overwrite, -o       Overwrite existing directory.
+```
+
+Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
+```bash
+python src/train_utils/dataset_preparation.py \
+    --csv-path data/train/ISIC_2020_Training_GroundTruth.csv \
+    --images-dir data/train/ \
+    --output-dir data/train/resized \
+    --image-size 224 224 \
+    --val-split 0.2 \
+    --seed 27
 ```
