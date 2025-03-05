@@ -51,7 +51,7 @@ def resize_and_save_images(
         tasks.append((src_path, dest_path, image_size))
 
     with Pool(processes=cpu_count()) as pool:
-        list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Resizing images"))
+        list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
 
 
 def split_dataset(
