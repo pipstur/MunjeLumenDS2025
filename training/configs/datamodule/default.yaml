@@ -1,8 +1,9 @@
 _target_: training.src.datamodules.datamodule.MelanomaDataModule
-data_dir: ${paths.data_dir}/podaci/ # Set the path to the data directory here
+data_dir: ${paths.data_dir}/resized_kfold/ # Set the path to the data directory here
 batch_size: 128
-num_workers: 6
-pin_memory: True
+num_workers: 12 # Number of (virtual) CPU cores to use for data loading
+tile_size: [224, 224] # This is used for the exporting of the model to ONNX mainly. It is the size of the input image.
+pin_memory: True # If True, the data loader will copy Tensors into CUDA pinned memory before returning them.
 grayscale: False
 train_da: True
 val_da: False

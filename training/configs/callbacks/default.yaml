@@ -16,7 +16,7 @@ model_checkpoint:
 
 early_stopping:
   monitor: "val/loss"
-  patience: 500   # todo change to fewer to turn on
+  patience: 5   # todo change to fewer to turn on
   mode: "min"
 
 model_summary:

@@ -1,5 +1,5 @@
 import io
-from typing import Any, List
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -140,7 +140,7 @@ class Model(LightningModule):
         # remember to always return loss from `training_step()` or backpropagation will fail!
         return {"loss": loss, "preds": preds, "targets": targets}
 
-    def on_train_epoch_end(self, outputs: List[Any]):
+    def on_train_epoch_end(self):
         # `outputs` is a list of dicts returned from `training_step()`
         pass
 

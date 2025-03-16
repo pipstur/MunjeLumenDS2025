@@ -41,6 +41,7 @@ class MelanomaDataModule(LightningDataModule):
         data_dir: str = "",
         batch_size: int = 64,
         num_workers: int = 0,
+        tile_size: int = [224, 224],
         pin_memory: bool = False,
         grayscale: bool = False,
         train_da: bool = False,
@@ -97,6 +98,7 @@ class MelanomaDataModule(LightningDataModule):
             sampler=ImbalancedDatasetSampler(self.data_train),
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
+            persistent_workers=True,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,  # change to False when using sampler
         )
@@ -107,6 +109,7 @@ class MelanomaDataModule(LightningDataModule):
             sampler=ImbalancedDatasetSampler(self.data_val),
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
+            persistent_workers=True,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )
@@ -116,6 +119,7 @@ class MelanomaDataModule(LightningDataModule):
             dataset=self.data_test,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
+            persistent_workers=True,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
         )

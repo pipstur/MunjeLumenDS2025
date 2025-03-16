@@ -1,5 +1,5 @@
 # MunjeLumenDS2025
-Ovde će se naći sav kod, vizuelizacije, kao i ostale bitne stvari unutar rešenja u Lumen Data Science takmičenju 2025
+All of the code, visualizations and other things that are important to the entire solution can be found in this repository. The documentation will detail the different aspects of the entire pipeline.
 
 ## Standards of committing and branching on the repository
 1. Developers create a feature branch from main.
@@ -10,6 +10,7 @@ Example:
 ```bash
 git checkout -b vojislav/initial-setup
 ```
+
 2. Developers commit to this branch in the following manner:
 ```bash
 git commit -m "action: short description"
@@ -18,7 +19,8 @@ Example:
 ```bash
 git commit -m "add: initial infrastructure for the project"
 ```
-The actions that should generally be used are: `add`, `update`, `fix`.
+The actions that should generally be used are: `add`, `update`, `fix`. Removing something constitutes updating it, so give an additional comment in that case.
+
 3. When work is done (everything that's improtant for the feature is committed), they create a pull request.
 ```bash
 git push origin name/feature
@@ -44,18 +46,9 @@ General adding, committing tips:
 - Use `git status` a lot to see what you're working with.
 - Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
 
-## Visual Studio Code setup
-I suggest installing the following extensions, and configuring them in the settings:
-- Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
-- Flake8, then go into VS Code settings > Search for Flake8 > For `Flake8: Import Strategy` put `fromEnvironment`.
-- isort, then go into VS Code settings > Search for Flake8 > For `isort: Import Strategy` put `fromEnvironment`.
-- Python Extension Pack is good too.
-- RainbowCSV for easier viewing of `.csv` files.
-- vscode-pdf for easier viewing of `.pdf` files.
-
-## 1. Repository setup
-
-### Virtual environment setup
+## 0. Repository setup
+This part of the documentation will detail the different steps in setting up the environment in order to run this project.
+### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
 
@@ -66,25 +59,40 @@ Creating a virtual environment requires a certain version of Python, we'll work 
 `venv\Scripts\activate`
 - Windows (PowerShell):
 `venv\Scripts\Activate.ps1`
-- Linux/macOS/Windows(Git Bash):
+- Windows (Git Bash):
+`source venv/Scripts/activate`
+- Linux/macOS:
 `source venv/bin/activate`
 
 Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
-### Installing dependencies
-1. Pre-commit install for local linting (flake8, black, isort):
+### 0.2. Installing dependencies
+1. For the requirements, run the following command:
+```bash
+pip install -r requirements.txt
+```
+
+2. Pre-commit install for local linting (flake8, black, isort) (Optional, Dev only):
 ```bash
 pip install pre-commit==2.13
 pre-commit install
 ```
 
-2. For the requirements, run the following command:
-```bash
-pip install -r requirements.txt
-```
+### 0.3. Visual Studio Code setup (Optional, Dev only)
+I suggest installing the following extensions, and configuring them in the settings:
+- Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
+- Flake8, then go into VS Code settings > Search for Flake8 > For `Flake8: Import Strategy` put `fromEnvironment`.
+- isort, then go into VS Code settings > Search for Flake8 > For `isort: Import Strategy` put `fromEnvironment`.
+- Python Extension Pack is good too.
+- RainbowCSV for easier viewing of `.csv` files.
+- vscode-pdf for easier viewing of `.pdf` files.
+
+This ensures there's no need to run pre-commit each time (the linting happens automatically because of the extensions), consequently making the code versioning part a little less daunting.
 
 
-## 2. Dataset preparation
+## 1. Training pipeline
+
+### 1.1. Dataset preparation
 
 ```bash
 usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--seed SEED]
@@ -108,12 +116,16 @@ options:
 ```
 
 Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
+
 ```bash
-python src/train_utils/dataset_preparation.py \
+python training/src/train_utils/dataset_preparation/dataset_preparation.py \
     --csv-path data/train/ISIC_2020_Training_GroundTruth.csv \
-    --images-dir data/train/ \
-    --output-dir data/train/resized \
+    --images-dir data/train/images/ \
+    --output-dir data/train/resized/ \
     --image-size 224 224 \
     --val-split 0.2 \
-    --seed 27
+    --seed 27 \
+    --kfold 5
 ```
+
+### 1.2. Training models
