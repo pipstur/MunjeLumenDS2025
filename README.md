@@ -1,4 +1,4 @@
-# MunjeLumenDS2025
+# MunjeLumenDS2025 Melanoma detection
 All of the code, visualizations and other things that are important to the entire solution can be found in this repository. The documentation will detail the different aspects of the entire pipeline.
 
 ## Standards of committing and branching on the repository
@@ -87,7 +87,7 @@ I suggest installing the following extensions, and configuring them in the setti
 - RainbowCSV for easier viewing of `.csv` files.
 - vscode-pdf for easier viewing of `.pdf` files.
 
-This ensures there's no need to run pre-commit each time (the linting happens automatically because of the extensions), consequently making the code versioning part a little less daunting.
+This ensures there's no need to run pre-commit each time (the linting happens automatically most of the time, because of the extensions), consequently making the code versioning part a little less daunting.
 
 
 ## 1. Training pipeline
@@ -129,3 +129,78 @@ python training/src/train_utils/dataset_preparation/dataset_preparation.py \
 ```
 
 ### 1.2. Training models
+For the entire training pipeline the following technologies are used:
+1. PyTorch Lightning for reproducibility, streamlining of code writing and debloating.
+2. Hydra for instantiating objects and experiment logging.
+3. Tensorboard / MLFlow for result logging.
+
+#### 1.2.1. Training scripts
+1. Setup the config files
+
+Datamodule
+```YAML
+_target_: training.src.datamodules.datamodule.MelanomaDataModule
+data_dir: ${paths.data_dir}/dataset/ # Set the path to the data directory here
+batch_size: 128
+num_workers: 6 # If you have a weaker cpu keep this at 4-6
+tile_size: [224, 224]
+pin_memory: True
+grayscale: False
+train_da: True
+val_da: False
+```
+
+- Note: The dataset directory that you are setting in the datamodule config must match the training you're going to do on it (regular training/val or K-Fold structure)
+
+Model
+```YAML
+_target_: training.src.models.mobilenetv3.MobileNetV3
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001 # Set the learning rate as you see fit
+  weight_decay: 0.001 # And the R2 regularization
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 5
+
+```
+
+2. Run the script for training or K-Fold training
+```bash
+python training/src/train/train.py
+python training/src/train/train_kfold.py
+```
+
+- Note: You can override parameters you set in the config files, for example change the dataset directory inside the run of the script. This works for every parameter in the configs, but to give an example: `python training/src/train/train.py datamodule.data_dir=data/other_dataset/`
+
+#### 1.2.2. Hyperparameter optimization
+The hyperparameter optimization is done using grid search (or other search supported by optuna)
+
+To do hyperparameter optimization:
+1. Set the config file up `hparams_search/grid_search.yaml`
+```YAML
+# @package _global_
+defaults:
+  - override /hydra/sweeper: basic
+optimized_metric: "val/acc_best"
+hydra:
+  mode: "MULTIRUN"
+
+  sweeper:
+    params:
+      model.optimizer.lr: choice(0.1, 0.01, 0.001, 0.0001)
+      datamodule.batch_size: choice(64, 128)
+      model.optimizer.weight_decay: choice(0.0, 0.01, 0.001)
+
+```
+2. Run the training script
+```bash
+python training/src/train/train.py -m hparams_search=grid_search
+python training/src/train/train_kfold.py -m hparams_search=grid_search
+```

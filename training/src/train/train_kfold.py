@@ -78,12 +78,12 @@ def train_kfold(cfg: DictConfig, n_splits: int = 5) -> Tuple[dict, dict]:
         model_checkpoint.dirpath = model_checkpoint.dirpath + "/fold" + str(fold)
 
         if cfg.get("train"):
-            log.info(f"Training Fold {fold + 1}")
+            log.info(f"Training Fold {fold}")
             trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
 
         train_metrics = trainer.callback_metrics
 
-        log.info(f"Evaluating Fold {fold + 1}")
+        log.info(f"Evaluating Fold {fold}")
         if cfg.get("test"):
             log.info("Starting testing!")
             ckpt_path = trainer.checkpoint_callback.best_model_path
@@ -110,7 +110,7 @@ def train_kfold(cfg: DictConfig, n_splits: int = 5) -> Tuple[dict, dict]:
 
     metrics_csv_path = Path(model_checkpoint.dirpath) / f"kfold_metrics_{timestamp}.csv"
     metrics_data = pd.DataFrame(fold_metrics)
-    metrics_data = metrics_data.append(average_metrics, ignore_index=True)
+    metrics_data = pd.concat([metrics_data, pd.DataFrame([average_metrics])], ignore_index=True)
     metrics_data.to_csv(metrics_csv_path, index=False)
     log.info(f"Metrics saved to {metrics_csv_path}")
 
