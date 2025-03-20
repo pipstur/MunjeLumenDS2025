@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 import pandas as pd
 from PIL import Image
+from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 
 
@@ -25,14 +26,7 @@ def resize_and_save_images(
     csv_file: str, image_dir: str, output_dir: str, image_size: Tuple[int, int]
 ) -> None:
     """
-    Resize images and save them in categorized folders based on labels from a CSV file,
-    using multiprocessing for faster processing.
-
-    Args:
-        csv_file (str): Path to the CSV file containing image names and labels.
-        image_dir (str): Path to the directory containing original images.
-        output_dir (str): Path to the directory where resized images will be saved.
-        image_size (Tuple[int, int]): Desired image size (width, height) for resizing.
+    Resize images and save them in categorized folders based on labels from a CSV file.
     """
     df = pd.read_csv(csv_file)
     df["image_name"] = df["image_name"] + ".jpg"
@@ -43,7 +37,6 @@ def resize_and_save_images(
     os.makedirs(malignant_dir, exist_ok=True)
 
     tasks: List[Tuple[str, str, Tuple[int, int]]] = []
-
     for _, row in df.iterrows():
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
@@ -54,19 +47,11 @@ def resize_and_save_images(
         list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
 
 
-def split_dataset(
-    dataset_dir: str, train_dir: str, val_dir: str, val_split: float = 0.2, seed: int = 27
+def standard_split(
+    dataset_dir: str, train_dir: str, val_dir: str, val_split: float, seed: int
 ) -> None:
     """
-    Split dataset into training and validation sets.
-
-    Args:
-        dataset_dir (str): Path to the directory containing categorized images.
-        train_dir (str): Path to the directory where training images will be stored.
-        val_dir (str): Path to the directory where validation images will be stored.
-        val_split (float, optional): Proportion of images to allocate to the validation set
-                                    (default is 0.2).
-        seed (int, optional): Random seed for reproducibility (default is 27).
+    Perform a standard train/val split.
     """
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(val_dir, exist_ok=True)
@@ -90,16 +75,57 @@ def split_dataset(
             val_images = images[:val_size]
             train_images = images[val_size:]
 
-            for img in tqdm(train_images, desc=f"Moving {category} train images"):
+            for img in train_images:
                 shutil.move(
                     os.path.join(category_path, img), os.path.join(train_category_path, img)
                 )
-            for img in tqdm(val_images, desc=f"Moving {category} val images"):
+            for img in val_images:
                 shutil.move(os.path.join(category_path, img), os.path.join(val_category_path, img))
 
             print(f"{category}: {len(train_images)} train, {len(val_images)} val")
-
+            shutil.rmtree(category_path)
     print("Dataset split complete.")
+
+
+def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> None:
+    """
+    Perform stratified k-fold split with progress tracking.
+    """
+    df = []
+    for category in ["benign", "malignant"]:
+        category_path = os.path.join(dataset_dir, category)
+        if os.path.isdir(category_path):
+            images = os.listdir(category_path)
+            labels = [category] * len(images)
+            df.extend(zip(images, labels))
+
+    df = pd.DataFrame(df, columns=["image_name", "label"])
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+
+    for fold, (train_idx, val_idx) in enumerate(skf.split(df["image_name"], df["label"])):
+        fold_dir = os.path.join(output_dir, f"fold{fold+1}")
+        train_dir, val_dir = os.path.join(fold_dir, "train"), os.path.join(fold_dir, "val")
+        os.makedirs(train_dir, exist_ok=True)
+        os.makedirs(val_dir, exist_ok=True)
+
+        for idx, split_dir in zip([train_idx, val_idx], [train_dir, val_dir]):
+            os.makedirs(os.path.join(split_dir, "benign"), exist_ok=True)
+            os.makedirs(os.path.join(split_dir, "malignant"), exist_ok=True)
+
+            for img_name, label in tqdm(
+                df.iloc[idx].values,
+                desc=f"Processing fold {fold+1} ({'train' if split_dir == train_dir else 'val'})",
+                leave=False,
+            ):
+                src_path = os.path.join(dataset_dir, label, img_name)
+                dest_path = os.path.join(split_dir, label, img_name)
+                shutil.copy(src_path, dest_path)
+
+        print(f"Fold {fold+1} created: {len(train_idx)} train, {len(val_idx)} val")
+
+    shutil.rmtree(os.path.join(output_dir, "benign"))
+    shutil.rmtree(os.path.join(output_dir, "malignant"))
+    print("K-Fold dataset split complete.")
 
 
 def cli():
@@ -121,16 +147,14 @@ def cli():
         help="Target image size (width height). Default: 224x224",
     )
     parser.add_argument(
-        "--val-split",
-        type=float,
-        default=0.2,
-        help="Fraction of data for validation (default: 0.2)",
+        "--val-split", type=float, default=0.2, help="Fraction of data for validation."
     )
-    parser.add_argument(
-        "--seed", type=int, default=27, help="Random seed for dataset split (default: 27)"
-    )
+    parser.add_argument("--seed", type=int, default=27, help="Random seed for dataset split.")
     parser.add_argument(
         "--overwrite", "-o", action="store_true", help="Overwrite existing directory."
+    )
+    parser.add_argument(
+        "--kfold", type=int, default=None, help="Number of folds for K-Fold cross-validation."
     )
     return parser.parse_args()
 
@@ -144,13 +168,17 @@ def main():
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
     resize_and_save_images(args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size))
-    split_dataset(
-        args.output_dir,
-        os.path.join(args.output_dir, "train"),
-        os.path.join(args.output_dir, "val"),
-        args.val_split,
-        args.seed,
-    )
+
+    if args.kfold:
+        kfold_split(args.output_dir, args.output_dir, args.kfold, args.seed)
+    else:
+        standard_split(
+            args.output_dir,
+            os.path.join(args.output_dir, "train"),
+            os.path.join(args.output_dir, "val"),
+            args.val_split,
+            args.seed,
+        )
 
 
 if __name__ == "__main__":
