@@ -43,7 +43,7 @@ def train_kfold(cfg: DictConfig, n_splits: int = 5) -> Tuple[dict, dict]:
     datadir = datamodule.data_dir
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    for fold in range(1, n_splits):
+    for fold in range(1, n_splits + 1):
         datamodule.data_dir = f"{datadir}/fold{fold}"
 
         # Instantiate model, trainer, and other components

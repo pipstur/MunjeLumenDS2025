@@ -191,7 +191,11 @@ def get_metric_value(metric_dict: dict, metric_name: str) -> float:
             "Make sure `optimized_metric` name in `hparams_search` config is correct!"
         )
 
-    metric_value = metric_dict[metric_name].item()
+    if type(metric_dict[metric_name]) is not dict:
+        metric_value = metric_dict[metric_name]
+    else:
+        metric_value = metric_dict[metric_name].item()
+
     log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
 
     return metric_value

@@ -123,6 +123,8 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
 
         print(f"Fold {fold+1} created: {len(train_idx)} train, {len(val_idx)} val")
 
+    shutil.rmtree(os.path.join(output_dir, "benign"))
+    shutil.rmtree(os.path.join(output_dir, "malignant"))
     print("K-Fold dataset split complete.")
 
 

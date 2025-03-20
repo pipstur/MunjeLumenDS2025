@@ -12,3 +12,5 @@ scheduler:
   mode: min
   factor: 0.1
   patience: 5
+
+freeze_layers: true

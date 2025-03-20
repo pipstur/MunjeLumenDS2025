@@ -26,6 +26,7 @@ class MobileNetV3(Model):
         self,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
+        freeze_layers: bool,
     ):
         super().__init__()
 
@@ -33,6 +34,10 @@ class MobileNetV3(Model):
         num_filters = backbone.classifier[0].in_features
 
         self.feature_extractor = nn.Sequential(*list(backbone.features.children()))
+
+        if freeze_layers:
+            for param in self.feature_extractor.parameters():
+                param.requires_grad = False
 
         self.classifier = nn.Linear(num_filters, self.num_classes)
 
