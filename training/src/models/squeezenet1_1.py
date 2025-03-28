@@ -1,13 +1,13 @@
 import torch
 from torch import nn
-from torchvision.models import MobileNet_V3_Large_Weights, mobilenet_v3_large
+from torchvision.models import SqueezeNet1_1_Weights, squeezenet1_1
 
 from training.src.models.components.model_class import Model
 
 torch.use_deterministic_algorithms(True, warn_only=True)
 
 
-class MobileNetV3(Model):
+class SqueezeNet1_1(Model):
     """Implementation of LightningModule.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -30,8 +30,8 @@ class MobileNetV3(Model):
     ):
         super().__init__()
 
-        backbone = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V1)
-        num_filters = backbone.classifier[0].in_features
+        backbone = squeezenet1_1(weights=SqueezeNet1_1_Weights.IMAGENET1K_V1)
+        num_filters = backbone.classifier[1].in_channels
 
         self.feature_extractor = nn.Sequential(*list(backbone.features.children()))
 
@@ -48,5 +48,5 @@ if __name__ == "__main__":
     import pyrootutils
 
     root = pyrootutils.setup_root(__file__, pythonpath=True)
-    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "mobilenetv3.yaml")
+    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "squeezenet1_1.yaml")
     _ = hydra.utils.instantiate(cfg)

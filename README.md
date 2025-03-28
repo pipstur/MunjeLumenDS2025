@@ -204,3 +204,6 @@ hydra:
 python training/src/train/train.py -m hparams_search=grid_search
 python training/src/train/train_kfold.py -m hparams_search=grid_search
 ```
+
+### 1.3. Evaluating models
+Model evaluation can be done using the `eval.py` method, to which the checkpoint path is passed in order to load it.
