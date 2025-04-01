@@ -206,6 +206,13 @@ def cli():
         help="Target image size (width height). Default: 224x224",
     )
     parser.add_argument(
+        "--split-type",
+        type=str,
+        required=True,
+        choices=["train", "kfold", "train-val-test"],
+        help="Type of split to perform.",
+    )
+    parser.add_argument(
         "--val-split", type=float, default=0.2, help="Fraction of data for validation."
     )
     parser.add_argument(
@@ -231,9 +238,17 @@ def main():
 
     resize_and_save_images(args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size))
 
-    if args.kfold:
-        kfold_split(args.output_dir, args.output_dir, args.kfold, args.seed)
-    else:
+    if args.split_type == "train":
+        standard_split(
+            args.output_dir,
+            os.path.join(args.output_dir, "train"),
+            os.path.join(args.output_dir, "train"),
+            os.path.join(args.output_dir, "train"),
+            0,
+            0,
+            args.seed,
+        )
+    elif args.split_type == "train-val-test":
         standard_split(
             args.output_dir,
             os.path.join(args.output_dir, "train"),
@@ -243,6 +258,8 @@ def main():
             args.test_split,
             args.seed,
         )
+    elif args.kfold:
+        kfold_split(args.output_dir, args.output_dir, args.kfold, args.seed)
 
 
 if __name__ == "__main__":

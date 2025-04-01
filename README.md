@@ -78,6 +78,12 @@ pip install pre-commit==2.13
 pre-commit install
 ```
 
+3. Install Git Large file storage, for the models to be tracked
+```bash
+git lfs install
+git lfs track ".onnx"
+```
+
 ### 0.3. Visual Studio Code setup (Optional, Dev only)
 I suggest installing the following extensions, and configuring them in the settings:
 - Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
@@ -235,3 +241,7 @@ Model evaluation can be done using the `eval.py` method, to which the checkpoint
 python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoints/epoch_x.ckpt
 ```
 - Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.
+
+
+## 2. The StreamLit App
+Our models are hosted on the streamlit platform on the url (insert_url_here), and single image inferencing can be done there.
