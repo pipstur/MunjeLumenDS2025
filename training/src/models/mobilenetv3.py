@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torchvision.models import MobileNet_V3_Large_Weights, mobilenet_v3_large
 
+from training.src.models.components.loss_functions import FocalLoss
 from training.src.models.components.model_class import Model
 
 torch.use_deterministic_algorithms(True, warn_only=True)
@@ -29,6 +30,9 @@ class MobileNetV3(Model):
         freeze_layers: bool,
     ):
         super().__init__()
+
+        # Cross entropy is default, defined in the model_class.py file, but we can overload it here
+        self.criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
 
         backbone = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V1)
         num_filters = backbone.classifier[0].in_features
