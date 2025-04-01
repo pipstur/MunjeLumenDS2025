@@ -40,10 +40,12 @@ class MelanomaDataModule(LightningDataModule):
         self,
         data_dir: str = "",
         batch_size: int = 64,
+        imbalanced_sampling: bool = False,
         num_workers: int = 0,
         tile_size: int = [224, 224],
         pin_memory: bool = False,
         grayscale: bool = False,
+        dirs: str = ["train", "val", "test"],
         train_da: bool = False,
         val_da: bool = False,
     ):
@@ -54,7 +56,8 @@ class MelanomaDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         self.data_dir = data_dir
-
+        self.dirs = dirs
+        self.imbalanced_sampling = imbalanced_sampling
         self.class_names = ["benign", "malignant"]
 
         train_trans = []
@@ -87,26 +90,39 @@ class MelanomaDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         self.data_train = ImageFolder(
-            Path(self.data_dir) / "train", transform=self.train_transforms
+            Path(self.data_dir) / self.dirs[0], transform=self.train_transforms
         )
-        self.data_val = ImageFolder(Path(self.data_dir) / "val", transform=self.val_transforms)
-        self.data_test = ImageFolder(Path(self.data_dir) / "val", transform=self.test_transforms)
+        self.data_val = ImageFolder(
+            Path(self.data_dir) / self.dirs[1], transform=self.val_transforms
+        )
+        self.data_test = ImageFolder(
+            Path(self.data_dir) / self.dirs[2], transform=self.test_transforms
+        )
 
     def train_dataloader(self):
-        return DataLoader(
-            dataset=self.data_train,
-            sampler=ImbalancedDatasetSampler(self.data_train),
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            persistent_workers=True,
-            pin_memory=self.hparams.pin_memory,
-            shuffle=False,  # change to False when using sampler
-        )
+        if self.imbalanced_sampling:
+            return DataLoader(
+                dataset=self.data_train,
+                sampler=ImbalancedDatasetSampler(self.data_train),
+                batch_size=self.hparams.batch_size,
+                num_workers=self.hparams.num_workers,
+                persistent_workers=True,
+                pin_memory=self.hparams.pin_memory,
+                shuffle=False,
+            )
+        else:
+            return DataLoader(
+                dataset=self.data_train,
+                batch_size=self.hparams.batch_size,
+                num_workers=self.hparams.num_workers,
+                persistent_workers=True,
+                pin_memory=self.hparams.pin_memory,
+                shuffle=True,
+            )
 
     def val_dataloader(self):
         return DataLoader(
             dataset=self.data_val,
-            sampler=ImbalancedDatasetSampler(self.data_val),
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             persistent_workers=True,

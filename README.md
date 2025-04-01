@@ -64,7 +64,7 @@ Creating a virtual environment requires a certain version of Python, we'll work 
 - Linux/macOS:
 `source venv/bin/activate`
 
-Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
+- Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### 0.2. Installing dependencies
 1. For the requirements, run the following command:
@@ -92,13 +92,29 @@ This ensures there's no need to run pre-commit each time (the linting happens au
 
 ## 1. Training pipeline
 
+### 1.0. Getting the data
+The data will be downloaded, extracted and put into a format that's ready to be preparated.
+```bash
+usage: get_datasets.py [-h] --output-dir OUTPUT_DIR
+
+Download and process ISIC dataset.
+
+options:
+  -h, --help            show this help message and exit
+  --output-dir OUTPUT_DIR
+                        Output directory for extracted data
+```
+
+Example execution:
+```bash
+python training/src/train_utils/dataset_preparation/get_datasets.py \
+--output-dir data/get_data/
+```
+
 ### 1.1. Dataset preparation
 
 ```bash
-usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--seed SEED]
-                              [--overwrite]
-
-Resize images and split dataset.
+usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--test-split TEST_SPLIT] [--seed SEED] [--overwrite] [--kfold KFOLD]
 
 options:
   -h, --help            show this help message and exit
@@ -110,16 +126,19 @@ options:
   --image-size IMAGE_SIZE IMAGE_SIZE
                         Target image size (width height). Default: 224x224
   --val-split VAL_SPLIT
-                        Fraction of data for validation (default: 0.2)
-  --seed SEED           Random seed for dataset split (default: 27)
+                        Fraction of data for validation.
+  --test-split TEST_SPLIT
+                        Fraction of data for testing.
+  --seed SEED           Random seed for dataset split.
   --overwrite, -o       Overwrite existing directory.
+  --kfold KFOLD         Number of folds for K-Fold cross-validation.
 ```
 
 Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
 
 ```bash
 python training/src/train_utils/dataset_preparation/dataset_preparation.py \
-    --csv-path data/train/ISIC_2020_Training_GroundTruth.csv \
+    --csv-path data/get_data/merged_output.csv \
     --images-dir data/train/images/ \
     --output-dir data/train/resized/ \
     --image-size 224 224 \
@@ -141,7 +160,9 @@ Datamodule
 ```YAML
 _target_: training.src.datamodules.datamodule.MelanomaDataModule
 data_dir: ${paths.data_dir}/dataset/ # Set the path to the data directory here
+dirs: ["train", "val", "test"]
 batch_size: 128
+imbalanced_sampling: true
 num_workers: 6 # If you have a weaker cpu keep this at 4-6
 tile_size: [224, 224]
 pin_memory: True
@@ -169,6 +190,7 @@ scheduler:
   factor: 0.1
   patience: 5
 
+freeze_layers: true
 ```
 
 2. Run the script for training or K-Fold training
@@ -188,7 +210,7 @@ To do hyperparameter optimization:
 # @package _global_
 defaults:
   - override /hydra/sweeper: basic
-optimized_metric: "val/acc_best"
+optimized_metric: "val/roc_auc_best"
 hydra:
   mode: "MULTIRUN"
 
@@ -204,3 +226,10 @@ hydra:
 python training/src/train/train.py -m hparams_search=grid_search
 python training/src/train/train_kfold.py -m hparams_search=grid_search
 ```
+
+### 1.3. Evaluating models
+Model evaluation can be done using the `eval.py` method, to which the checkpoint path is passed in order to load it.
+```bash
+python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoints/epoch_x.ckpt
+```
+- Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.

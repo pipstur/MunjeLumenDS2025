@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 import pandas as pd
 from PIL import Image
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
@@ -48,32 +48,54 @@ def resize_and_save_images(
 
 
 def standard_split(
-    dataset_dir: str, train_dir: str, val_dir: str, val_split: float, seed: int
+    dataset_dir: str,
+    train_dir: str,
+    val_dir: str,
+    test_dir: str,
+    val_split: float,
+    test_split: float,
+    seed: int,
 ) -> None:
     """
-    Perform a standard train/val split.
+    Perform a standard train/val/test split.
+
+    Args:
+        dataset_dir (str): Path to the dataset containing 'benign' and 'malignant' folders.
+        train_dir (str): Path to save the training dataset.
+        val_dir (str): Path to save the validation dataset.
+        test_dir (str): Path to save the test dataset.
+        val_split (float): Fraction of images to be used for validation.
+        test_split (float): Fraction of images to be used for testing.
+        seed (int): Random seed for reproducibility.
     """
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(val_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
 
     categories = ["benign", "malignant"]
     random.seed(seed)
 
-    for category in categories:
-        category_path = os.path.join(dataset_dir, category)
-        train_category_path = os.path.join(train_dir, category)
-        val_category_path = os.path.join(val_dir, category)
+    for cat in categories:
+        category_path = os.path.join(dataset_dir, cat)
+        train_category_path = os.path.join(train_dir, cat)
+        val_category_path = os.path.join(val_dir, cat)
+        test_category_path = os.path.join(test_dir, cat)
 
         if os.path.isdir(category_path):
             os.makedirs(train_category_path, exist_ok=True)
             os.makedirs(val_category_path, exist_ok=True)
+            os.makedirs(test_category_path, exist_ok=True)
 
             images = os.listdir(category_path)
             random.shuffle(images)
 
-            val_size = int(len(images) * val_split)
-            val_images = images[:val_size]
-            train_images = images[val_size:]
+            total = len(images)
+            test_size = int(total * test_split)
+            val_size = int(total * val_split)
+
+            test_images = images[:test_size]
+            val_images = images[test_size : test_size + val_size]
+            train_images = images[test_size + val_size :]
 
             for img in train_images:
                 shutil.move(
@@ -81,15 +103,29 @@ def standard_split(
                 )
             for img in val_images:
                 shutil.move(os.path.join(category_path, img), os.path.join(val_category_path, img))
+            for img in test_images:
+                shutil.move(
+                    os.path.join(category_path, img), os.path.join(test_category_path, img)
+                )
 
-            print(f"{category}: {len(train_images)} train, {len(val_images)} val")
+            print(
+                f"{cat}:{len(train_images)} train, {len(val_images)} val, {len(test_images)} test"
+            )
+
             shutil.rmtree(category_path)
+
     print("Dataset split complete.")
 
 
 def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> None:
     """
-    Perform stratified k-fold split with progress tracking.
+    Perform stratified k-fold split with separate test sets for each fold.
+
+    Args:
+        dataset_dir (str): Path to dataset containing "benign" and "malignant" folders.
+        output_dir (str): Path where the k-fold splits will be stored.
+        n_splits (int): Number of folds for cross-validation.
+        seed (int): Random seed for reproducibility.
     """
     df = []
     for category in ["benign", "malignant"]:
@@ -100,28 +136,51 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
             df.extend(zip(images, labels))
 
     df = pd.DataFrame(df, columns=["image_name", "label"])
+
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
 
-    for fold, (train_idx, val_idx) in enumerate(skf.split(df["image_name"], df["label"])):
+    for fold, (train_val_idx, test_idx) in enumerate(skf.split(df["image_name"], df["label"])):
         fold_dir = os.path.join(output_dir, f"fold{fold+1}")
-        train_dir, val_dir = os.path.join(fold_dir, "train"), os.path.join(fold_dir, "val")
-        os.makedirs(train_dir, exist_ok=True)
-        os.makedirs(val_dir, exist_ok=True)
+        train_dir, val_dir, test_dir = (
+            os.path.join(fold_dir, "train"),
+            os.path.join(fold_dir, "val"),
+            os.path.join(fold_dir, "test"),
+        )
 
-        for idx, split_dir in zip([train_idx, val_idx], [train_dir, val_dir]):
-            os.makedirs(os.path.join(split_dir, "benign"), exist_ok=True)
-            os.makedirs(os.path.join(split_dir, "malignant"), exist_ok=True)
+        for d in [train_dir, val_dir, test_dir]:
+            os.makedirs(os.path.join(d, "benign"), exist_ok=True)
+            os.makedirs(os.path.join(d, "malignant"), exist_ok=True)
 
+        # Split train_val further into training and validation sets
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
+        train_idx, val_idx = next(
+            sss.split(df.iloc[train_val_idx]["image_name"], df.iloc[train_val_idx]["label"])
+        )
+
+        # Move test images
+        for img_name, label in tqdm(
+            df.iloc[test_idx][["image_name", "label"]].values,
+            desc=f"Processing fold {fold+1} (test)",
+            leave=False,
+        ):
+            src_path = os.path.join(dataset_dir, label, img_name)
+            dest_path = os.path.join(test_dir, label, img_name)
+            shutil.copy(src_path, dest_path)
+
+        for indices, split_dir, split_name in [
+            (train_idx, train_dir, "train"),
+            (val_idx, val_dir, "val"),
+        ]:
             for img_name, label in tqdm(
-                df.iloc[idx].values,
-                desc=f"Processing fold {fold+1} ({'train' if split_dir == train_dir else 'val'})",
+                df.iloc[train_val_idx].iloc[indices][["image_name", "label"]].values,
+                desc=f"Processing fold {fold+1} ({split_name})",
                 leave=False,
             ):
                 src_path = os.path.join(dataset_dir, label, img_name)
                 dest_path = os.path.join(split_dir, label, img_name)
                 shutil.copy(src_path, dest_path)
 
-        print(f"Fold {fold+1} created: {len(train_idx)} train, {len(val_idx)} val")
+        print(f"Fold {fold+1}: {len(train_idx)} train, {len(val_idx)} val, {len(test_idx)} test")
 
     shutil.rmtree(os.path.join(output_dir, "benign"))
     shutil.rmtree(os.path.join(output_dir, "malignant"))
@@ -129,7 +188,7 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="Resize images and split dataset.")
+    parser = argparse.ArgumentParser(description="Dataset preparation for the training of models.")
     parser.add_argument(
         "--csv-path", type=str, required=True, help="Path to the CSV file with labels."
     )
@@ -148,6 +207,9 @@ def cli():
     )
     parser.add_argument(
         "--val-split", type=float, default=0.2, help="Fraction of data for validation."
+    )
+    parser.add_argument(
+        "--test-split", type=float, default=0.2, help="Fraction of data for testing."
     )
     parser.add_argument("--seed", type=int, default=27, help="Random seed for dataset split.")
     parser.add_argument(
@@ -176,7 +238,9 @@ def main():
             args.output_dir,
             os.path.join(args.output_dir, "train"),
             os.path.join(args.output_dir, "val"),
+            os.path.join(args.output_dir, "test"),
             args.val_split,
+            args.test_split,
             args.seed,
         )
 
