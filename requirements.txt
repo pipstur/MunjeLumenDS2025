@@ -25,3 +25,4 @@ numpy==2.2.2
 pandas==2.2.3
 matplotlib==3.10.0
 tensorboard==2.19.0
+requests==2.32.3
