@@ -52,9 +52,6 @@ class Model(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["net"])
         self.num_classes = 2
 
-        # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
-
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(task="binary")
         self.val_acc = Accuracy(task="binary")
