@@ -14,3 +14,5 @@ scheduler:
   patience: 5
 
 freeze_layers: true
+
+loss_function: focal # choices: focal, cross_entropy

@@ -28,11 +28,15 @@ class MobileNetV3(Model):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         freeze_layers: bool,
+        loss_function: str = "cross_entropy",
     ):
         super().__init__()
 
-        # Cross entropy is default, defined in the model_class.py file, but we can overload it here
-        self.criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
+        # loss function
+        if loss_function == "cross_entropy":
+            self.criterion = torch.nn.CrossEntropyLoss()
+        elif loss_function == "focal":
+            self.criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
 
         backbone = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V1)
         num_filters = backbone.classifier[0].in_features

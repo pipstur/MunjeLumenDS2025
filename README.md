@@ -191,6 +191,8 @@ scheduler:
   patience: 5
 
 freeze_layers: true
+
+loss_function: focal
 ```
 
 2. Run the script for training or K-Fold training
