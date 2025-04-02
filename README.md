@@ -1,6 +1,9 @@
 # MunjeLumenDS2025 Melanoma detection
 All of the code, visualizations and other things that are important to the entire solution can be found in this repository. The documentation will detail the different aspects of the entire pipeline.
 
+## Hosted on Streamlit!
+The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.
+
 ## Standards of committing and branching on the repository
 1. Developers create a feature branch from main.
 ```bash
@@ -76,6 +79,12 @@ pip install -r requirements.txt
 ```bash
 pip install pre-commit==2.13
 pre-commit install
+```
+
+3. Install Git Large file storage, for the models to be tracked
+```bash
+git lfs install
+git lfs track "*.onnx"
 ```
 
 ### 0.3. Visual Studio Code setup (Optional, Dev only)
@@ -235,3 +244,9 @@ Model evaluation can be done using the `eval.py` method, to which the checkpoint
 python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoints/epoch_x.ckpt
 ```
 - Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.
+
+## 2. Running the Streamlit app locally
+The streamlit app can be run locally, if you choose to iterate over it, this is done by the following command:
+```bash
+streamlit run app/streamlit_app.py
+```

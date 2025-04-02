@@ -3,8 +3,8 @@ _target_: training.src.models.squeezenet1_1.SqueezeNet1_1
 optimizer:
   _target_: torch.optim.Adam
   _partial_: true
-  lr: 0.001
-  weight_decay: 0.001
+  lr: 0.0001
+  weight_decay: 0.0001
 
 scheduler:
   _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
