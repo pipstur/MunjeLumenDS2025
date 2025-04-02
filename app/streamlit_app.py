@@ -12,6 +12,9 @@ warnings.filterwarnings("ignore")
 MODEL_PATH = "models/melanoma.onnx"
 IMAGE_SIZE = (224, 224)
 CLASS_NAMES = ["Benign", "Malignant"]
+REFERENCE_IMAGE_URL = (
+    "https://www.yashodahealthcare.com/blogs/wp-content/uploads/2021/07/melanoma-skin-cancer.jpeg"
+)
 
 
 @st.cache_resource
@@ -50,6 +53,17 @@ def main():
     st.title("🔬 Melanoma Detection App")
     st.write("Upload an image to check if it's **benign** or **malignant**.")
 
+    st.image(
+        REFERENCE_IMAGE_URL,
+        caption="How to notice early signs of Melanoma",
+        use_container_width=True,
+    )
+    st.write(
+        """
+
+        """
+    )
+
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
     if uploaded_file:
@@ -69,8 +83,12 @@ def main():
 
     st.write(
         """
-        **Disclaimer:**\n
+        **Disclaimer:**
         This model is for educational purposes only and should not be used for medical diagnosis.
+        Our model has been trained and validated on many images, however
+        we cannot guarantee its accuracy.
+        Consult the diagram above and judge for yourself, or go to a dermatologist
+        if you feel you are in risk of melanoma.
         """
     )
 
