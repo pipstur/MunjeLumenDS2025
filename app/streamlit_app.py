@@ -58,11 +58,6 @@ def main():
         caption="How to notice early signs of Melanoma",
         use_container_width=True,
     )
-    st.write(
-        """
-
-        """
-    )
 
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 

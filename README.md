@@ -244,3 +244,9 @@ Model evaluation can be done using the `eval.py` method, to which the checkpoint
 python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoints/epoch_x.ckpt
 ```
 - Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.
+
+## 2. Running the Streamlit app locally
+The streamlit app can be run locally, if you choose to iterate over it, this is done by the following command:
+```bash
+streamlit run app/streamlit_app.py
+```
