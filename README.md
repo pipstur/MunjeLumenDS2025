@@ -1,6 +1,9 @@
 # MunjeLumenDS2025 Melanoma detection
 All of the code, visualizations and other things that are important to the entire solution can be found in this repository. The documentation will detail the different aspects of the entire pipeline.
 
+## Hosted on Streamlit!
+The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.
+
 ## Standards of committing and branching on the repository
 1. Developers create a feature branch from main.
 ```bash
@@ -73,7 +76,7 @@ Creating a virtual environment requires a certain version of Python, we'll work 
 - Linux/macOS:
 `source venv/bin/activate`
 
-Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
+- Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### 0.2. Installing dependencies
 1. For the requirements, run the following command:
@@ -87,19 +90,49 @@ pip install pre-commit==2.13
 pre-commit install
 ```
 
-2. For the requirements, run the following command:
+3. Install Git Large file storage, for the models to be tracked
 ```bash
-pip install -r requirements.txt
+git lfs install
+git lfs track "*.onnx"
 ```
 
+### 0.3. Visual Studio Code setup (Optional, Dev only)
+I suggest installing the following extensions, and configuring them in the settings:
+- Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
+- Flake8, then go into VS Code settings > Search for Flake8 > For `Flake8: Import Strategy` put `fromEnvironment`.
+- isort, then go into VS Code settings > Search for Flake8 > For `isort: Import Strategy` put `fromEnvironment`.
+- Python Extension Pack is good too.
+- RainbowCSV for easier viewing of `.csv` files.
+- vscode-pdf for easier viewing of `.pdf` files.
 
-## 2. Dataset preparation
+This ensures there's no need to run pre-commit each time (the linting happens automatically most of the time, because of the extensions), consequently making the code versioning part a little less daunting.
+
+
+## 1. Training pipeline
+
+### 1.0. Getting the data
+The data will be downloaded, extracted and put into a format that's ready to be preparated.
+```bash
+usage: get_datasets.py [-h] --output-dir OUTPUT_DIR
+
+Download and process ISIC dataset.
+
+options:
+  -h, --help            show this help message and exit
+  --output-dir OUTPUT_DIR
+                        Output directory for extracted data
+```
+
+Example execution:
+```bash
+python training/src/train_utils/dataset_preparation/get_datasets.py \
+--output-dir data/get_data/
+```
+
+### 1.1. Dataset preparation
 
 ```bash
-usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--seed SEED]
-                              [--overwrite]
-
-Resize images and split dataset.
+usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--test-split TEST_SPLIT] [--seed SEED] [--overwrite] [--kfold KFOLD]
 
 options:
   -h, --help            show this help message and exit
@@ -111,18 +144,117 @@ options:
   --image-size IMAGE_SIZE IMAGE_SIZE
                         Target image size (width height). Default: 224x224
   --val-split VAL_SPLIT
-                        Fraction of data for validation (default: 0.2)
-  --seed SEED           Random seed for dataset split (default: 27)
+                        Fraction of data for validation.
+  --test-split TEST_SPLIT
+                        Fraction of data for testing.
+  --seed SEED           Random seed for dataset split.
   --overwrite, -o       Overwrite existing directory.
+  --kfold KFOLD         Number of folds for K-Fold cross-validation.
 ```
 
 Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
 ```bash
-python src/train_utils/dataset_preparation.py \
-    --csv-path data/train/ISIC_2020_Training_GroundTruth.csv \
-    --images-dir data/train/ \
-    --output-dir data/train/resized \
+python training/src/train_utils/dataset_preparation/dataset_preparation.py \
+    --csv-path data/get_data/merged_output.csv \
+    --images-dir data/train/images/ \
+    --output-dir data/train/resized/ \
     --image-size 224 224 \
     --val-split 0.2 \
-    --seed 27
+    --seed 27 \
+    --kfold 5
+```
+
+### 1.2. Training models
+For the entire training pipeline the following technologies are used:
+1. PyTorch Lightning for reproducibility, streamlining of code writing and debloating.
+2. Hydra for instantiating objects and experiment logging.
+3. Tensorboard / MLFlow for result logging.
+
+#### 1.2.1. Training scripts
+1. Setup the config files
+
+Datamodule
+```YAML
+_target_: training.src.datamodules.datamodule.MelanomaDataModule
+data_dir: ${paths.data_dir}/dataset/ # Set the path to the data directory here
+dirs: ["train", "val", "test"]
+batch_size: 128
+imbalanced_sampling: true
+num_workers: 6 # If you have a weaker cpu keep this at 4-6
+tile_size: [224, 224]
+pin_memory: True
+grayscale: False
+train_da: True
+val_da: False
+```
+
+- Note: The dataset directory that you are setting in the datamodule config must match the training you're going to do on it (regular training/val or K-Fold structure)
+
+Model
+```YAML
+_target_: training.src.models.mobilenetv3.MobileNetV3
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001 # Set the learning rate as you see fit
+  weight_decay: 0.001 # And the R2 regularization
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 5
+
+freeze_layers: true
+
+loss_function: focal
+```
+
+2. Run the script for training or K-Fold training
+```bash
+python training/src/train/train.py
+python training/src/train/train_kfold.py
+```
+
+- Note: You can override parameters you set in the config files, for example change the dataset directory inside the run of the script. This works for every parameter in the configs, but to give an example: `python training/src/train/train.py datamodule.data_dir=data/other_dataset/`
+
+#### 1.2.2. Hyperparameter optimization
+The hyperparameter optimization is done using grid search (or other search supported by optuna)
+
+To do hyperparameter optimization:
+1. Set the config file up `hparams_search/grid_search.yaml`
+```YAML
+# @package _global_
+defaults:
+  - override /hydra/sweeper: basic
+optimized_metric: "val/roc_auc_best"
+hydra:
+  mode: "MULTIRUN"
+
+  sweeper:
+    params:
+      model.optimizer.lr: choice(0.1, 0.01, 0.001, 0.0001)
+      datamodule.batch_size: choice(64, 128)
+      model.optimizer.weight_decay: choice(0.0, 0.01, 0.001)
+
+```
+2. Run the training script
+```bash
+python training/src/train/train.py -m hparams_search=grid_search
+python training/src/train/train_kfold.py -m hparams_search=grid_search
+```
+
+### 1.3. Evaluating models
+Model evaluation can be done using the `eval.py` method, to which the checkpoint path is passed in order to load it.
+```bash
+python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoints/epoch_x.ckpt
+```
+- Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.
+
+## 2. Running the Streamlit app locally
+The streamlit app can be run locally, if you choose to iterate over it, this is done by the following command:
+```bash
+streamlit run app/streamlit_app.py
 ```

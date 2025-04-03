@@ -17,6 +17,7 @@ from torchmetrics import (
     F1Score,
     MaxMetric,
     MeanMetric,
+    Precision,
     Recall,
     Specificity,
 )
@@ -51,9 +52,6 @@ class Model(LightningModule):
         self.save_hyperparameters(logger=False, ignore=["net"])
         self.num_classes = 2
 
-        # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
-
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(task="binary")
         self.val_acc = Accuracy(task="binary")
@@ -71,6 +69,10 @@ class Model(LightningModule):
         self.val_recall = Recall(task="binary")
         self.test_recall = Recall(task="binary")
 
+        self.train_precision = Precision(task="binary")
+        self.val_precision = Precision(task="binary")
+        self.test_precision = Precision(task="binary")
+
         # for averaging loss across batches
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
@@ -87,7 +89,7 @@ class Model(LightningModule):
         self.test_auprc = AveragePrecision(task="binary")
 
         # for tracking best so far validation accuracy
-        self.val_acc_best = MaxMetric()
+        self.val_roc_auc_best = MaxMetric()
         self.feature_extractor = None
         self.classifier = None
 
@@ -104,8 +106,8 @@ class Model(LightningModule):
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
-        # so we need to make sure val_acc_best doesn't store accuracy from these checks
-        self.val_acc_best.reset()
+        # so we need to make sure val_roc_auc_best doesn't store accuracy from these checks
+        self.val_roc_auc_best.reset()
 
     def model_step(self, batch: Any):
         x, y = batch
@@ -123,6 +125,7 @@ class Model(LightningModule):
         self.train_acc(preds, targets)
         self.train_spec(preds, targets)
         self.train_recall(preds, targets)
+        self.train_precision(preds, targets)
         self.train_f1(preds, targets)
         self.train_roc_auc(preds, targets)
         self.train_auprc(probs, targets)
@@ -131,6 +134,7 @@ class Model(LightningModule):
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/spec", self.train_spec, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/recall", self.train_recall, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/prec", self.train_precision, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/f1", self.train_f1, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/roc_auc", self.train_roc_auc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/auprc", self.train_auprc, on_step=False, on_epoch=True, prog_bar=True)
@@ -152,6 +156,7 @@ class Model(LightningModule):
         self.val_acc(preds, targets)
         self.val_spec(preds, targets)
         self.val_recall(preds, targets)
+        self.val_precision(preds, targets)
         self.val_f1(preds, targets)
         self.val_roc_auc(preds, targets)
         self.val_auprc(probs, targets)
@@ -160,6 +165,7 @@ class Model(LightningModule):
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/spec", self.val_spec, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/recall", self.val_recall, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/prec", self.val_precision, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/f1", self.val_f1, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/roc_auc", self.val_roc_auc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/auprc", self.val_auprc, on_step=False, on_epoch=True, prog_bar=True)
@@ -167,11 +173,9 @@ class Model(LightningModule):
         return {"loss": loss, "preds": preds, "targets": targets}
 
     def on_validation_epoch_end(self):
-        acc = self.val_acc.compute()  # get current val acc
-        self.val_acc_best(acc)  # update best so far val acc
-        # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
-        # otherwise metric would be reset by lightning after each epoch
-        self.log("val/acc_best", self.val_acc_best.compute(), prog_bar=True)
+        roc_auc = self.val_roc_auc.compute()  # get current val acc
+        self.val_roc_auc_best(roc_auc)  # update best so far val acc
+        self.log("val/roc_auc_best", self.val_roc_auc_best.compute(), prog_bar=True)
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets, probs = self.model_step(batch)
@@ -181,6 +185,7 @@ class Model(LightningModule):
         self.test_acc(preds, targets)
         self.test_spec(preds, targets)
         self.test_recall(preds, targets)
+        self.test_precision(preds, targets)
         self.test_f1(preds, targets)
         self.con_mat(preds, targets)
         self.test_roc_auc(preds, targets)
@@ -190,6 +195,7 @@ class Model(LightningModule):
         self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/spec", self.test_spec, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/recall", self.test_recall, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/prec", self.test_precision, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/f1", self.test_f1, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/roc_auc", self.test_roc_auc, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test/auprc", self.test_auprc, on_step=False, on_epoch=True, prog_bar=True)
