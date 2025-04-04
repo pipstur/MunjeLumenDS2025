@@ -47,7 +47,7 @@ def process_image(args: Tuple[str, str, Tuple[int, int], str]) -> None:
     try:
         with Image.open(src_path) as img:
             img = img.resize(image_size, Image.BILINEAR)
-            if remove_hair_flag == 'yes':
+            if remove_hair_flag == "yes":
                 img = remove_hair(img)
             img.save(dest_path)
     except Exception as e:
@@ -55,7 +55,11 @@ def process_image(args: Tuple[str, str, Tuple[int, int], str]) -> None:
 
 
 def resize_and_save_images(
-    csv_file: str, image_dir: str, output_dir: str, image_size: Tuple[int, int], remove_hair_flag: str
+    csv_file: str,
+    image_dir: str,
+    output_dir: str,
+    image_size: Tuple[int, int],
+    remove_hair_flag: str,
 ) -> None:
     """
     Resize images and save them in categorized folders based on labels from a CSV file.
@@ -262,7 +266,7 @@ def cli():
         type=str,
         choices=["yes", "no"],
         default="yes",
-        help="Whether to apply hair removal"
+        help="Whether to apply hair removal",
     )
     return parser.parse_args()
 
@@ -275,7 +279,9 @@ def main():
         else:
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
-    resize_and_save_images(args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size), args.remove_hair)
+    resize_and_save_images(
+        args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size), args.remove_hair
+    )
 
     if args.split_type == "train":
         standard_split(
