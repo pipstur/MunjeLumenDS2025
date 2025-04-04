@@ -49,9 +49,18 @@ General adding, committing tips:
 - Use `git status` a lot to see what you're working with.
 - Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
 
-## 0. Repository setup
-This part of the documentation will detail the different steps in setting up the environment in order to run this project.
-### 0.1. Virtual environment setup
+## Visual Studio Code setup
+I suggest installing the following extensions, and configuring them in the settings:
+- Black formatter, then go into VS Code settings > As a Default formatter add Black formatter > Search for Black > To `Black-formatter: Args` add: `--line-length=99`.
+- Flake8, then go into VS Code settings > Search for Flake8 > For `Flake8: Import Strategy` put `fromEnvironment`.
+- isort, then go into VS Code settings > Search for Flake8 > For `isort: Import Strategy` put `fromEnvironment`.
+- Python Extension Pack is good too.
+- RainbowCSV for easier viewing of `.csv` files.
+- vscode-pdf for easier viewing of `.pdf` files.
+
+## 1. Repository setup
+
+### Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
 
@@ -144,7 +153,6 @@ options:
 ```
 
 Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
-
 ```bash
 python training/src/train_utils/dataset_preparation/dataset_preparation.py \
     --csv-path data/get_data/merged_output.csv \

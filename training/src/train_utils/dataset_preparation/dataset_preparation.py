@@ -5,25 +5,61 @@ import shutil
 from multiprocessing import Pool, cpu_count
 from typing import List, Tuple
 
+import cv2
+import numpy as np
 import pandas as pd
 from PIL import Image
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
-def process_image(args: Tuple[str, str, Tuple[int, int]]) -> None:
+def remove_hair(image: Image.Image) -> Image.Image:
+    """
+    Removes hair artifacts from a PIL image using morphological operations and inpainting.
+    It performs the following steps:
+    - Converts the image to grayscale.
+    - Applies a black hat morphological operation to highlight hair strands.
+    - Blurs the result to smooth noise.
+    - Creates a binary mask by thresholding.
+    - Uses inpainting to remove the hair from the original image based on the mask.
+
+    Args:
+        image (PIL.Image.Image): Input image as a PIL Image in RGB format.
+
+    Returns:
+        PIL.Image.Image: A new PIL Image with hair artifacts removed.
+    """
+    image_np = np.array(image)
+    grayScale = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+    blackhat = cv2.morphologyEx(grayScale, cv2.MORPH_BLACKHAT, kernel)
+    bhg = cv2.GaussianBlur(blackhat, (3, 3), 0)
+    ret, mask = cv2.threshold(bhg, 10, 255, cv2.THRESH_BINARY)
+    cleaned = cv2.inpaint(image_np, mask, 3, cv2.INPAINT_TELEA)
+    cleaned_pil = Image.fromarray(cleaned)
+
+    return cleaned_pil
+
+
+def process_image(args: Tuple[str, str, Tuple[int, int], bool]) -> None:
     """Helper function to resize an image and save it in the appropriate directory."""
-    src_path, dest_path, image_size = args
+    src_path, dest_path, image_size, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
             img = img.resize(image_size, Image.BILINEAR)
+            if remove_hair_flag:
+                img = remove_hair(img)
             img.save(dest_path)
     except Exception as e:
         print(f"Error processing {src_path}: {e}")
 
 
 def resize_and_save_images(
-    csv_file: str, image_dir: str, output_dir: str, image_size: Tuple[int, int]
+    csv_file: str,
+    image_dir: str,
+    output_dir: str,
+    image_size: Tuple[int, int],
+    remove_hair_flag: bool,
 ) -> None:
     """
     Resize images and save them in categorized folders based on labels from a CSV file.
@@ -36,12 +72,12 @@ def resize_and_save_images(
     os.makedirs(benign_dir, exist_ok=True)
     os.makedirs(malignant_dir, exist_ok=True)
 
-    tasks: List[Tuple[str, str, Tuple[int, int]]] = []
+    tasks: List[Tuple[str, str, Tuple[int, int]], bool] = []
     for _, row in df.iterrows():
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
         dest_path = os.path.join(dest_dir, row["image_name"])
-        tasks.append((src_path, dest_path, image_size))
+        tasks.append((src_path, dest_path, image_size, remove_hair_flag))
 
     with Pool(processes=cpu_count()) as pool:
         list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
@@ -225,6 +261,10 @@ def cli():
     parser.add_argument(
         "--kfold", type=int, default=None, help="Number of folds for K-Fold cross-validation."
     )
+    parser.add_argument(
+        "--remove-hair", action="store_true", help="Whether to apply hair removal."
+    )
+
     return parser.parse_args()
 
 
@@ -236,7 +276,9 @@ def main():
         else:
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
-    resize_and_save_images(args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size))
+    resize_and_save_images(
+        args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size), args.remove_hair
+    )
 
     if args.split_type == "train":
         standard_split(
