@@ -41,13 +41,13 @@ def remove_hair(image: Image.Image) -> Image.Image:
     return cleaned_pil
 
 
-def process_image(args: Tuple[str, str, Tuple[int, int], str]) -> None:
+def process_image(args: Tuple[str, str, Tuple[int, int], bool]) -> None:
     """Helper function to resize an image and save it in the appropriate directory."""
     src_path, dest_path, image_size, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
             img = img.resize(image_size, Image.BILINEAR)
-            if remove_hair_flag == "yes":
+            if remove_hair_flag:
                 img = remove_hair(img)
             img.save(dest_path)
     except Exception as e:
@@ -72,7 +72,7 @@ def resize_and_save_images(
     os.makedirs(benign_dir, exist_ok=True)
     os.makedirs(malignant_dir, exist_ok=True)
 
-    tasks: List[Tuple[str, str, Tuple[int, int]]] = []
+    tasks: List[Tuple[str, str, Tuple[int, int]],bool] = []
     for _, row in df.iterrows():
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
@@ -262,12 +262,9 @@ def cli():
         "--kfold", type=int, default=None, help="Number of folds for K-Fold cross-validation."
     )
     parser.add_argument(
-        "--remove-hair",
-        type=str,
-        choices=["yes", "no"],
-        default="yes",
-        help="Whether to apply hair removal",
+        "--remove-hair", action="store_true", help="Whether to apply hair removal."
     )
+
     return parser.parse_args()
 
 
