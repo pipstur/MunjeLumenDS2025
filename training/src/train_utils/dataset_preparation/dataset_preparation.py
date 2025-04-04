@@ -59,7 +59,7 @@ def resize_and_save_images(
     image_dir: str,
     output_dir: str,
     image_size: Tuple[int, int],
-    remove_hair_flag: str,
+    remove_hair_flag: bool,
 ) -> None:
     """
     Resize images and save them in categorized folders based on labels from a CSV file.
