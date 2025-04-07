@@ -13,6 +13,37 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
+def resize_with_padding(
+    image: Image.Image,
+    canvas_size: Tuple[int, int],
+    padding_color: Tuple[int, int, int] = (255, 255, 255),
+) -> Image.Image:
+    """
+    Resize an image to fit within a given canvas size while preserving its aspect ratio.
+    Pads the image with a specified color to fill the remaining space.
+
+    Parameters
+    ----------
+    image : PIL.Image.Image
+        The input image to be resized and padded.
+    canvas_size : tuple of int
+        The (width, height) of the output canvas.
+    padding_color : tuple of int, optional
+        The RGB color used for padding. Default is white (255, 255, 255).
+
+    Returns
+    -------
+    PIL.Image.Image
+        The resized and padded image.
+    """
+    image.thumbnail(canvas_size, Image.LANCZOS)
+    canvas = Image.new("RGB", canvas_size, padding_color)
+    paste_x = (canvas_size[0] - image.size[0]) // 2
+    paste_y = (canvas_size[1] - image.size[1]) // 2
+    canvas.paste(image, (paste_x, paste_y))
+    return canvas
+
+
 def apply_clahe(
     image: Image.Image, clip_limit: float = 1.0, tile_grid_size: tuple = (5, 5)
 ) -> Image.Image:
@@ -77,10 +108,13 @@ def remove_hair(image: Image.Image) -> Image.Image:
 
 def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool]) -> None:
     """Helper function to resize an image and save it in the appropriate directory."""
-    src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag = args
+    src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag, padding = args
     try:
         with Image.open(src_path) as img:
-            img = img.resize(image_size, Image.BILINEAR)
+            if padding:
+                img = resize_with_padding(img, image_size)
+            else:
+                img = img.resize(image_size, Image.BILINEAR)
             if apply_clahe_flag:
                 img = apply_clahe(img, 1.4, (8, 8))
             if remove_hair_flag:
@@ -97,6 +131,7 @@ def resize_and_save_images(
     image_size: Tuple[int, int],
     apply_clahe_flag: bool,
     remove_hair_flag: bool,
+    padding: bool,
 ) -> None:
     """
     Resize images and save them in categorized folders based on labels from a CSV file.
@@ -114,7 +149,9 @@ def resize_and_save_images(
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
         dest_path = os.path.join(dest_dir, row["image_name"])
-        tasks.append((src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag))
+        tasks.append(
+            (src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag, padding)
+        )
 
     with Pool(processes=cpu_count()) as pool:
         list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
@@ -304,6 +341,9 @@ def cli():
     parser.add_argument(
         "--remove-hair", action="store_true", help="Whether to apply hair removal."
     )
+    parser.add_argument(
+        "--padding", action="store_true", help="Whether to add padding to scaled image."
+    )
 
     return parser.parse_args()
 
@@ -323,6 +363,7 @@ def main():
         tuple(args.image_size),
         args.apply_clahe,
         args.remove_hair,
+        args.padding,
     )
 
     if args.split_type == "train":
