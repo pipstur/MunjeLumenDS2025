@@ -82,7 +82,7 @@ def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool]) -> None:
         with Image.open(src_path) as img:
             img = img.resize(image_size, Image.BILINEAR)
             if apply_clahe_flag:
-                img = apply_clahe(img)
+                img = apply_clahe(img, 1.4, (8, 8))
             if remove_hair_flag:
                 img = remove_hair(img)
             img.save(dest_path)
