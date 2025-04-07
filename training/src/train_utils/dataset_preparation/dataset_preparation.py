@@ -13,6 +13,40 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
+def apply_clahe(
+    image: Image.Image, clip_limit: float = 1.0, tile_grid_size: tuple = (5, 5)
+) -> Image.Image:
+    """
+    Enhances the contrast of an image using CLAHE
+    (Contrast Limited Adaptive Histogram Equalization)
+    applied to the lightness (L) channel of the LAB color space.
+    CLAHE is applied only to the L channel to enhance contrast without altering colors
+
+    Parameters:
+    - image (PIL.Image.Image): Input image in RGB format.
+    - clip_limit (float, optional): Threshold for contrast limiting. Higher
+     values increase contrast but may amplify noise. Default is 1.0.
+    - tile_grid_size (tuple of int, optional): Size of the grid for dividing the image into tiles
+      (e.g., (5, 5)). CLAHE is applied to each tile individually, allowing
+      localized contrast enhancement.
+      Smaller tiles result in more localized adjustments. Default is (5, 5).
+
+    Returns:
+    - PIL.Image.Image: The contrast-enhanced image in RGB format.
+    """
+
+    image_np = np.array(image)
+    lab = cv2.cvtColor(image_np, cv2.COLOR_BGR2LAB)
+    l_channel, a_channel, b_channel = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+    l_clahe = clahe.apply(l_channel)
+    lab_clahe = cv2.merge((l_clahe, a_channel, b_channel))
+    enhanced_image = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
+    enhanced_pil = Image.fromarray(enhanced_image)
+
+    return enhanced_pil
+
+
 def remove_hair(image: Image.Image) -> Image.Image:
     """
     Removes hair artifacts from a PIL image using morphological operations and inpainting.
@@ -41,12 +75,14 @@ def remove_hair(image: Image.Image) -> Image.Image:
     return cleaned_pil
 
 
-def process_image(args: Tuple[str, str, Tuple[int, int], bool]) -> None:
+def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool]) -> None:
     """Helper function to resize an image and save it in the appropriate directory."""
-    src_path, dest_path, image_size, remove_hair_flag = args
+    src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
             img = img.resize(image_size, Image.BILINEAR)
+            if apply_clahe_flag:
+                img = apply_clahe(img)
             if remove_hair_flag:
                 img = remove_hair(img)
             img.save(dest_path)
@@ -59,6 +95,7 @@ def resize_and_save_images(
     image_dir: str,
     output_dir: str,
     image_size: Tuple[int, int],
+    apply_clahe_flag: bool,
     remove_hair_flag: bool,
 ) -> None:
     """
@@ -77,7 +114,7 @@ def resize_and_save_images(
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
         dest_path = os.path.join(dest_dir, row["image_name"])
-        tasks.append((src_path, dest_path, image_size, remove_hair_flag))
+        tasks.append((src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag))
 
     with Pool(processes=cpu_count()) as pool:
         list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
@@ -262,6 +299,9 @@ def cli():
         "--kfold", type=int, default=None, help="Number of folds for K-Fold cross-validation."
     )
     parser.add_argument(
+        "--apply-clahe", action="store_true", help="Whether to apply CLAHE enhancment."
+    )
+    parser.add_argument(
         "--remove-hair", action="store_true", help="Whether to apply hair removal."
     )
 
@@ -277,7 +317,12 @@ def main():
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
     resize_and_save_images(
-        args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size), args.remove_hair
+        args.csv_path,
+        args.images_dir,
+        args.output_dir,
+        tuple(args.image_size),
+        args.apply_clahe,
+        args.remove_hair,
     )
 
     if args.split_type == "train":
