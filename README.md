@@ -104,7 +104,6 @@ pre-commit install
 3. Install Git Large file storage, for the models to be tracked
 ```bash
 git lfs install
-git lfs track "*.onnx"
 ```
 
 ### 0.3. Visual Studio Code setup (Optional, Dev only)
