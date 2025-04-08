@@ -261,7 +261,7 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
             os.makedirs(os.path.join(d, "benign"), exist_ok=True)
             os.makedirs(os.path.join(d, "malignant"), exist_ok=True)
 
-        # Split train_val further into training and validation sets
+        # Split  train_val further into training and validation sets
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
         train_idx, val_idx = next(
             sss.split(df.iloc[train_val_idx]["image_name"], df.iloc[train_val_idx]["label"])
