@@ -13,44 +13,24 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
-def resize_with_padding(
-    image: Image.Image,
-    canvas_size: Tuple[int, int],
-    padding_color: Tuple[int, int, int] = (255, 255, 255),
-) -> Image.Image:
-    """
-    Resize an image to fit within a given canvas size while preserving its aspect ratio.
-    Pads the image with a specified color to fill the remaining space.
-
-    Parameters
-    ----------
-    image : PIL.Image.Image
-        The input image to be resized and padded.
-    canvas_size : tuple of int
-        The (width, height) of the output canvas.
-    padding_color : tuple of int, optional
-        The RGB color used for padding. Default is white (255, 255, 255).
-
-    Returns
-    -------
-    PIL.Image.Image
-        The resized and padded image.
-    """
-    image.thumbnail(canvas_size, Image.LANCZOS)
-    canvas = Image.new("RGB", canvas_size, padding_color)
-    paste_x = (canvas_size[0] - image.size[0]) // 2
-    paste_y = (canvas_size[1] - image.size[1]) // 2
-    canvas.paste(image, (paste_x, paste_y))
-    return canvas
-
-
 def resize_image(
     image: Image.Image,
     image_size: Tuple[int, int],
     padding_flag: bool,
     padding_color: Tuple[int, int, int] = (255, 255, 255),
 ) -> Image.Image:
+    """
+    Resizes an image to the target size, with optional padding.
 
+    Args:
+        image (Image.Image): Input image.
+        image_size (Tuple[int, int]): Desired (width, height) of the output image.
+        padding_flag (bool): If True, maintains aspect ratio and pads the image.
+        padding_color (Tuple[int, int, int], optional): Color used for padding. Defaults to white.
+
+    Returns:
+        Image.Image: The resized (and optionally padded) image.
+    """
     if padding_flag:
         canvas_size = image_size
         image.thumbnail(canvas_size, Image.LANCZOS)
@@ -99,35 +79,48 @@ def apply_clahe(
     return enhanced_pil
 
 
-def remove_hair(image: Image.Image) -> Image.Image:
+def remove_hair(
+    image: Image.Image,
+    kernel_size: Tuple[int, int] = (9, 9),
+    blur_size: Tuple[int, int] = (3, 3),
+    threshold: int = 10,
+    inpaint_radius: int = 3,
+    inpaint_method: int = cv2.INPAINT_TELEA,
+) -> Image.Image:
     """
     Removes hair artifacts from a PIL image using morphological operations and inpainting.
-    It performs the following steps:
-    - Converts the image to grayscale.
-    - Applies a black hat morphological operation to highlight hair strands.
-    - Blurs the result to smooth noise.
-    - Creates a binary mask by thresholding.
-    - Uses inpainting to remove the hair from the original image based on the mask.
+
+    The process involves:
+    - Converting the image to grayscale.
+    - Applying a black hat morphological operation to highlight hair strands.
+    - Blurring the result to reduce noise.
+    - Creating a binary mask by thresholding the blurred image.
+    - Using inpainting to remove the hair from the original image based on the mask.
 
     Args:
-        image (PIL.Image.Image): Input image as a PIL Image in RGB format.
-
+        image (PIL.Image.Image): Input image in RGB format.
+        kernel_size (Tuple[int, int], optional): Size of the structuring element for blackhat
+        blur_size (Tuple[int, int], optional): Kernel size for Gaussian blur. Must be odd.
+        threshold (int, optional): Threshold value for binary mask creation.
+        inpaint_radius (int, optional): Radius of the circular neighborhood for inpainting.
+        inpaint_method (int, optional): OpenCV inpainting method
     Returns:
-        PIL.Image.Image: A new PIL Image with hair artifacts removed.
+        PIL.Image.Image: A new image with hair artifacts removed.
     """
     image_np = np.array(image)
-    grayScale = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
-    blackhat = cv2.morphologyEx(grayScale, cv2.MORPH_BLACKHAT, kernel)
-    bhg = cv2.GaussianBlur(blackhat, (3, 3), 0)
-    ret, mask = cv2.threshold(bhg, 10, 255, cv2.THRESH_BINARY)
-    cleaned = cv2.inpaint(image_np, mask, 3, cv2.INPAINT_TELEA)
-    cleaned_pil = Image.fromarray(cleaned)
-
-    return cleaned_pil
+    gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+    blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
+    blurred = cv2.GaussianBlur(blackhat, blur_size, 0)
+    _, mask = cv2.threshold(blurred, threshold, 255, cv2.THRESH_BINARY)
+    cleaned = cv2.inpaint(image_np, mask, inpaint_radius, inpaint_method)
+    return Image.fromarray(cleaned)
 
 
 def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]):
+    """
+    Applies resizing and optional preprocessing steps to an image.
+    """
     image, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
 
     image = resize_image(image, image_size, padding_flag)
@@ -140,7 +133,7 @@ def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]
 
 
 def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool, bool]) -> None:
-    """Helper function to resize an image and save it in the appropriate directory."""
+    """Loads an image, applies preprocessing, and saves the result."""
     src_path, dest_path, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
@@ -162,7 +155,20 @@ def process_image_batch(
     remove_hair_flag: bool,
 ) -> None:
     """
-    Resize images and save them in categorized folders based on labels from a CSV file.
+    Processes and saves images into 'benign' and 'malignant'
+    folders based on labels from CSV file.
+
+    Applies optional preprocessing, resizes images, and saves them
+    into categorized folders using multiprocessing.
+
+    Args:
+        csv_file (str): Path to CSV with image names and labels.
+        image_dir (str): Directory containing input images.
+        output_dir (str): Destination directory for processed images.
+        image_size (Tuple[int, int]): Target size (width, height) for output images.
+        padding_flag (bool): Add padding to preserve aspect ratio if True.
+        apply_clahe_flag (bool): Apply CLAHE if True.
+        remove_hair_flag (bool): Apply hair removal preprocessing if True.
     """
     df = pd.read_csv(csv_file)
     df["image_name"] = df["image_name"] + ".jpg"
