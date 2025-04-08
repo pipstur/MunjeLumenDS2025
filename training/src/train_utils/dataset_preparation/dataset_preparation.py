@@ -138,7 +138,7 @@ def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool, bool]) -> N
     try:
         with Image.open(src_path) as img:
             img = preprocess_image(
-                img, image_size, padding_flag, apply_clahe_flag, remove_hair_flag
+                [img, image_size, padding_flag, apply_clahe_flag, remove_hair_flag]
             )
             img.save(dest_path)
     except Exception as e:
