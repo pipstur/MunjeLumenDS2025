@@ -44,6 +44,27 @@ def resize_with_padding(
     return canvas
 
 
+def resize_image(
+    image: Image.Image,
+    image_size: Tuple[int, int],
+    padding_flag: bool,
+    padding_color: Tuple[int, int, int] = (255, 255, 255),
+) -> Image.Image:
+
+    if padding_flag:
+        canvas_size = image_size
+        image.thumbnail(canvas_size, Image.LANCZOS)
+        canvas = Image.new("RGB", canvas_size, padding_color)
+        paste_x = (canvas_size[0] - image.size[0]) // 2
+        paste_y = (canvas_size[1] - image.size[1]) // 2
+        canvas.paste(image, (paste_x, paste_y))
+        image = canvas
+    else:
+        image = image.resize(image_size, Image.BILINEAR)
+
+    return image
+
+
 def apply_clahe(
     image: Image.Image, clip_limit: float = 1.0, tile_grid_size: tuple = (5, 5)
 ) -> Image.Image:
@@ -106,32 +127,39 @@ def remove_hair(image: Image.Image) -> Image.Image:
     return cleaned_pil
 
 
-def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool]) -> None:
+def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]):
+    image, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
+
+    image = resize_image(image, image_size, padding_flag)
+    if apply_clahe_flag:
+        image = apply_clahe(image, 1.4, (8, 8))
+    if remove_hair_flag:
+        image = remove_hair(image)
+
+    return image
+
+
+def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool, bool]) -> None:
     """Helper function to resize an image and save it in the appropriate directory."""
-    src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag, padding = args
+    src_path, dest_path, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
-            if padding:
-                img = resize_with_padding(img, image_size)
-            else:
-                img = img.resize(image_size, Image.BILINEAR)
-            if apply_clahe_flag:
-                img = apply_clahe(img, 1.4, (8, 8))
-            if remove_hair_flag:
-                img = remove_hair(img)
+            img = preprocess_image(
+                img, image_size, padding_flag, apply_clahe_flag, remove_hair_flag
+            )
             img.save(dest_path)
     except Exception as e:
         print(f"Error processing {src_path}: {e}")
 
 
-def resize_and_save_images(
+def process_image_batch(
     csv_file: str,
     image_dir: str,
     output_dir: str,
     image_size: Tuple[int, int],
+    padding_flag: bool,
     apply_clahe_flag: bool,
     remove_hair_flag: bool,
-    padding: bool,
 ) -> None:
     """
     Resize images and save them in categorized folders based on labels from a CSV file.
@@ -150,7 +178,7 @@ def resize_and_save_images(
         src_path = os.path.join(image_dir, row["image_name"])
         dest_path = os.path.join(dest_dir, row["image_name"])
         tasks.append(
-            (src_path, dest_path, image_size, apply_clahe_flag, remove_hair_flag, padding)
+            (src_path, dest_path, image_size, padding_flag, apply_clahe_flag, remove_hair_flag)
         )
 
     with Pool(processes=cpu_count()) as pool:
@@ -261,7 +289,7 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
             os.makedirs(os.path.join(d, "benign"), exist_ok=True)
             os.makedirs(os.path.join(d, "malignant"), exist_ok=True)
 
-        # Split  train_val further into training and validation sets
+        # Split train_val further into training and validation sets
         sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
         train_idx, val_idx = next(
             sss.split(df.iloc[train_val_idx]["image_name"], df.iloc[train_val_idx]["label"])
@@ -356,14 +384,14 @@ def main():
         else:
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
-    resize_and_save_images(
+    process_image_batch(
         args.csv_path,
         args.images_dir,
         args.output_dir,
         tuple(args.image_size),
+        args.padding,
         args.apply_clahe,
         args.remove_hair,
-        args.padding,
     )
 
     if args.split_type == "train":
