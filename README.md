@@ -92,7 +92,7 @@ source venv/bin/activate
 ### 0.2. Installing dependencies
 1. For the requirements, run the following command:
 ```bash
-pip install --index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
 ```
 
 2. Pre-commit install for local linting (flake8, black, isort) (Optional, Dev only):
