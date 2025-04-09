@@ -36,7 +36,7 @@ git push origin vojislav/initial-setup
 5. Code is reviewed and approved.
 - This is important because the developers need to be up to date with what is being done on the project.
 6. The PR is merged using rebase and fast-forward, keeping a linear history. When merging the pull request, you should select the option to `squash and merge`.
-- The source branch will be deleted when merged.
+- The source branch can be deleted when merged.
 7. No merge commits, ensuring a clean Git history.
 8. When you are finished, to update the remote repo with your own:
 ```bash
@@ -47,7 +47,7 @@ git pull --rebase
 
 General adding, committing tips:
 - Use `git status` a lot to see what you're working with.
-- Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
+- Use `git tree` to see what branch you're checked out to (as well as the commit history), so there is no mixup to what branch it's being committed to.
 
 ## Visual Studio Code setup
 I suggest installing the following extensions, and configuring them in the settings:
@@ -64,24 +64,35 @@ I suggest installing the following extensions, and configuring them in the setti
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
 
-1. To create a virtual environment run the following:
-`python3.10 -m venv venv`
-2. Then, based on operating system, in the chosen terminal run the following:
+1. To create and activate a virtual environment run the following, based on your operating system:
 - Windows (cmd):
-`venv\Scripts\activate`
+```bash
+python3 -m venv venv
+venv\Scripts\activate
+```
 - Windows (PowerShell):
-`venv\Scripts\Activate.ps1`
+```bash
+python3 -m venv venv
+venv\Scripts\Activate.ps1
+```
 - Windows (Git Bash):
-`source venv/Scripts/activate`
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
 - Linux/macOS:
-`source venv/bin/activate`
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
 
 - Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### 0.2. Installing dependencies
 1. For the requirements, run the following command:
 ```bash
-pip install -r requirements.txt
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
 ```
 
 2. Pre-commit install for local linting (flake8, black, isort) (Optional, Dev only):
@@ -93,7 +104,6 @@ pre-commit install
 3. Install Git Large file storage, for the models to be tracked
 ```bash
 git lfs install
-git lfs track "*.onnx"
 ```
 
 ### 0.3. Visual Studio Code setup (Optional, Dev only)
@@ -132,7 +142,11 @@ python training/src/train_utils/dataset_preparation/get_datasets.py \
 ### 1.1. Dataset preparation
 
 ```bash
-usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] [--val-split VAL_SPLIT] [--test-split TEST_SPLIT] [--seed SEED] [--overwrite] [--kfold KFOLD]
+usage: dataset_preparation.py [-h] --csv-path CSV_PATH --images-dir IMAGES_DIR --output-dir OUTPUT_DIR [--image-size IMAGE_SIZE IMAGE_SIZE] --split-type
+                              {train,kfold,train-val-test} [--val-split VAL_SPLIT] [--test-split TEST_SPLIT] [--seed SEED] [--overwrite] [--kfold KFOLD] [--apply-clahe]
+                              [--remove-hair] [--padding]
+
+Dataset preparation for the training of models.
 
 options:
   -h, --help            show this help message and exit
@@ -143,6 +157,8 @@ options:
                         Directory to save resized images.
   --image-size IMAGE_SIZE IMAGE_SIZE
                         Target image size (width height). Default: 224x224
+  --split-type {train,kfold,train-val-test}
+                        Type of split to perform.
   --val-split VAL_SPLIT
                         Fraction of data for validation.
   --test-split TEST_SPLIT
@@ -150,18 +166,45 @@ options:
   --seed SEED           Random seed for dataset split.
   --overwrite, -o       Overwrite existing directory.
   --kfold KFOLD         Number of folds for K-Fold cross-validation.
+  --apply-clahe         Whether to apply CLAHE enhancment.
+  --remove-hair         Whether to apply hair removal.
+  --padding             Whether to add padding to scaled image.
 ```
 
-Running the script for dataset preparations is done as so, if you placed the original dataset into the `data/` folder:
+Running the script for dataset preparations is done as so:
+
+1. K-fold dataset
 ```bash
 python training/src/train_utils/dataset_preparation/dataset_preparation.py \
-    --csv-path data/get_data/merged_output.csv \
-    --images-dir data/train/images/ \
-    --output-dir data/train/resized/ \
+    --csv-path data/get_data/merged_labels.csv \
+    --images-dir data/get_data/images/ \
+    --output-dir data/kfold_train/ \
     --image-size 224 224 \
-    --val-split 0.2 \
     --seed 27 \
-    --kfold 5
+    --kfold 5 \
+    --split-type kfold
+```
+
+2. Train-val-test split dataset
+```bash
+python training/src/train_utils/dataset_preparation/dataset_preparation.py \
+    --csv-path data/get_data/merged_labels.csv \
+    --images-dir data/get_data/images/ \
+    --output-dir data/train_val_test/ \
+    --image-size 224 224 \
+    --seed 27 \
+    --split-type train-val-test
+```
+
+3. Final training dataset
+```bash
+python training/src/train_utils/dataset_preparation/dataset_preparation.py \
+    --csv-path data/get_data/merged_labels.csv \
+    --images-dir data/get_data/images/ \
+    --output-dir data/final_train/ \
+    --image-size 224 224 \
+    --seed 27 \
+    --split-type train
 ```
 
 ### 1.2. Training models

@@ -13,56 +13,162 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from tqdm import tqdm
 
 
-def remove_hair(image: Image.Image) -> Image.Image:
+def resize_image(
+    image: Image.Image,
+    image_size: Tuple[int, int],
+    padding_flag: bool,
+    padding_color: Tuple[int, int, int] = (255, 255, 255),
+) -> Image.Image:
     """
-    Removes hair artifacts from a PIL image using morphological operations and inpainting.
-    It performs the following steps:
-    - Converts the image to grayscale.
-    - Applies a black hat morphological operation to highlight hair strands.
-    - Blurs the result to smooth noise.
-    - Creates a binary mask by thresholding.
-    - Uses inpainting to remove the hair from the original image based on the mask.
+    Resizes an image to the target size, with optional padding.
 
     Args:
-        image (PIL.Image.Image): Input image as a PIL Image in RGB format.
+        image (Image.Image): Input image.
+        image_size (Tuple[int, int]): Desired (width, height) of the output image.
+        padding_flag (bool): If True, maintains aspect ratio and pads the image.
+        padding_color (Tuple[int, int, int], optional): Color used for padding. Defaults to white.
 
     Returns:
-        PIL.Image.Image: A new PIL Image with hair artifacts removed.
+        Image.Image: The resized (and optionally padded) image.
+    """
+    if padding_flag:
+        canvas_size = image_size
+        image.thumbnail(canvas_size, Image.LANCZOS)
+        canvas = Image.new("RGB", canvas_size, padding_color)
+        paste_x = (canvas_size[0] - image.size[0]) // 2
+        paste_y = (canvas_size[1] - image.size[1]) // 2
+        canvas.paste(image, (paste_x, paste_y))
+        image = canvas
+    else:
+        image = image.resize(image_size, Image.BILINEAR)
+
+    return image
+
+
+def apply_clahe(
+    image: Image.Image, clip_limit: float = 1.0, tile_grid_size: tuple = (5, 5)
+) -> Image.Image:
+    """
+    Enhances the contrast of an image using CLAHE
+    (Contrast Limited Adaptive Histogram Equalization)
+    applied to the lightness (L) channel of the LAB color space.
+    CLAHE is applied only to the L channel to enhance contrast without altering colors
+
+    Parameters:
+    - image (PIL.Image.Image): Input image in RGB format.
+    - clip_limit (float, optional): Threshold for contrast limiting. Higher
+     values increase contrast but may amplify noise. Default is 1.0.
+    - tile_grid_size (tuple of int, optional): Size of the grid for dividing the image into tiles
+      (e.g., (5, 5)). CLAHE is applied to each tile individually, allowing
+      localized contrast enhancement.
+      Smaller tiles result in more localized adjustments. Default is (5, 5).
+
+    Returns:
+    - PIL.Image.Image: The contrast-enhanced image in RGB format.
+    """
+
+    image_np = np.array(image)
+    lab = cv2.cvtColor(image_np, cv2.COLOR_BGR2LAB)
+    l_channel, a_channel, b_channel = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+    l_clahe = clahe.apply(l_channel)
+    lab_clahe = cv2.merge((l_clahe, a_channel, b_channel))
+    enhanced_image = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
+    enhanced_pil = Image.fromarray(enhanced_image)
+
+    return enhanced_pil
+
+
+def remove_hair(
+    image: Image.Image,
+    kernel_size: Tuple[int, int] = (9, 9),
+    blur_size: Tuple[int, int] = (3, 3),
+    threshold: int = 10,
+    inpaint_radius: int = 3,
+    inpaint_method: int = cv2.INPAINT_TELEA,
+) -> Image.Image:
+    """
+    Removes hair artifacts from a PIL image using morphological operations and inpainting.
+
+    The process involves:
+    - Converting the image to grayscale.
+    - Applying a black hat morphological operation to highlight hair strands.
+    - Blurring the result to reduce noise.
+    - Creating a binary mask by thresholding the blurred image.
+    - Using inpainting to remove the hair from the original image based on the mask.
+
+    Args:
+        image (PIL.Image.Image): Input image in RGB format.
+        kernel_size (Tuple[int, int], optional): Size of the structuring element for blackhat
+        blur_size (Tuple[int, int], optional): Kernel size for Gaussian blur. Must be odd.
+        threshold (int, optional): Threshold value for binary mask creation.
+        inpaint_radius (int, optional): Radius of the circular neighborhood for inpainting.
+        inpaint_method (int, optional): OpenCV inpainting method
+    Returns:
+        PIL.Image.Image: A new image with hair artifacts removed.
     """
     image_np = np.array(image)
-    grayScale = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
-    blackhat = cv2.morphologyEx(grayScale, cv2.MORPH_BLACKHAT, kernel)
-    bhg = cv2.GaussianBlur(blackhat, (3, 3), 0)
-    ret, mask = cv2.threshold(bhg, 10, 255, cv2.THRESH_BINARY)
-    cleaned = cv2.inpaint(image_np, mask, 3, cv2.INPAINT_TELEA)
-    cleaned_pil = Image.fromarray(cleaned)
-
-    return cleaned_pil
+    gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+    blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
+    blurred = cv2.GaussianBlur(blackhat, blur_size, 0)
+    _, mask = cv2.threshold(blurred, threshold, 255, cv2.THRESH_BINARY)
+    cleaned = cv2.inpaint(image_np, mask, inpaint_radius, inpaint_method)
+    return Image.fromarray(cleaned)
 
 
-def process_image(args: Tuple[str, str, Tuple[int, int], bool]) -> None:
-    """Helper function to resize an image and save it in the appropriate directory."""
-    src_path, dest_path, image_size, remove_hair_flag = args
+def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]):
+    """
+    Applies resizing and optional preprocessing steps to an image.
+    """
+    image, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
+
+    image = resize_image(image, image_size, padding_flag)
+    if apply_clahe_flag:
+        image = apply_clahe(image, 1.4, (8, 8))
+    if remove_hair_flag:
+        image = remove_hair(image)
+
+    return image
+
+
+def process_image(args: Tuple[str, str, Tuple[int, int], bool, bool, bool]) -> None:
+    """Loads an image, applies preprocessing, and saves the result."""
+    src_path, dest_path, image_size, padding_flag, apply_clahe_flag, remove_hair_flag = args
     try:
         with Image.open(src_path) as img:
-            img = img.resize(image_size, Image.BILINEAR)
-            if remove_hair_flag:
-                img = remove_hair(img)
+            img = preprocess_image(
+                [img, image_size, padding_flag, apply_clahe_flag, remove_hair_flag]
+            )
             img.save(dest_path)
     except Exception as e:
         print(f"Error processing {src_path}: {e}")
 
 
-def resize_and_save_images(
+def process_image_batch(
     csv_file: str,
     image_dir: str,
     output_dir: str,
     image_size: Tuple[int, int],
+    padding_flag: bool,
+    apply_clahe_flag: bool,
     remove_hair_flag: bool,
 ) -> None:
     """
-    Resize images and save them in categorized folders based on labels from a CSV file.
+    Processes and saves images into 'benign' and 'malignant'
+    folders based on labels from CSV file.
+
+    Applies optional preprocessing, resizes images, and saves them
+    into categorized folders using multiprocessing.
+
+    Args:
+        csv_file (str): Path to CSV with image names and labels.
+        image_dir (str): Directory containing input images.
+        output_dir (str): Destination directory for processed images.
+        image_size (Tuple[int, int]): Target size (width, height) for output images.
+        padding_flag (bool): Add padding to preserve aspect ratio if True.
+        apply_clahe_flag (bool): Apply CLAHE if True.
+        remove_hair_flag (bool): Apply hair removal preprocessing if True.
     """
     df = pd.read_csv(csv_file)
     df["image_name"] = df["image_name"] + ".jpg"
@@ -77,7 +183,9 @@ def resize_and_save_images(
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
         dest_path = os.path.join(dest_dir, row["image_name"])
-        tasks.append((src_path, dest_path, image_size, remove_hair_flag))
+        tasks.append(
+            (src_path, dest_path, image_size, padding_flag, apply_clahe_flag, remove_hair_flag)
+        )
 
     with Pool(processes=cpu_count()) as pool:
         list(tqdm(pool.imap(process_image, tasks), total=len(tasks), desc="Processing images"))
@@ -262,7 +370,13 @@ def cli():
         "--kfold", type=int, default=None, help="Number of folds for K-Fold cross-validation."
     )
     parser.add_argument(
+        "--apply-clahe", action="store_true", help="Whether to apply CLAHE enhancment."
+    )
+    parser.add_argument(
         "--remove-hair", action="store_true", help="Whether to apply hair removal."
+    )
+    parser.add_argument(
+        "--padding", action="store_true", help="Whether to add padding to scaled image."
     )
 
     return parser.parse_args()
@@ -276,8 +390,14 @@ def main():
         else:
             raise FileExistsError("Output directory already exists. Use --overwrite to replace.")
 
-    resize_and_save_images(
-        args.csv_path, args.images_dir, args.output_dir, tuple(args.image_size), args.remove_hair
+    process_image_batch(
+        args.csv_path,
+        args.images_dir,
+        args.output_dir,
+        tuple(args.image_size),
+        args.padding,
+        args.apply_clahe,
+        args.remove_hair,
     )
 
     if args.split_type == "train":
