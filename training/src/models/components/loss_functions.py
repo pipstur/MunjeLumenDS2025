@@ -22,3 +22,14 @@ class FocalLoss(torch.nn.Module):
 
         loss = alpha_t * (1 - pt) ** self.gamma * BCE_loss
         return loss.mean() if self.reduction == "mean" else loss.sum()
+
+
+def get_loss_function(loss_function: str):
+    """Selects and returns the appropriate loss function."""
+
+    if loss_function == "cross_entropy":
+        return torch.nn.CrossEntropyLoss()
+    elif loss_function == "focal":
+        return FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
+    else:
+        raise ValueError(f"Unsupported loss function: {loss_function}")

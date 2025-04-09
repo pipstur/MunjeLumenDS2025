@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchvision.models import SqueezeNet1_1_Weights, squeezenet1_1
 
-from training.src.models.components.loss_functions import FocalLoss
+from training.src.models.components.loss_functions import get_loss_function
 from training.src.models.components.model_class import Model
 
 torch.use_deterministic_algorithms(True, warn_only=True)
@@ -32,11 +32,7 @@ class SqueezeNet1_1(Model):
     ):
         super().__init__()
 
-        # loss function
-        if loss_function == "cross_entropy":
-            self.criterion = torch.nn.CrossEntropyLoss()
-        elif loss_function == "focal":
-            self.criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
+        self.criterion = get_loss_function(loss_function)
 
         backbone = squeezenet1_1(weights=SqueezeNet1_1_Weights.IMAGENET1K_V1)
         num_filters = backbone.classifier[1].in_channels

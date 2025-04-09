@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchvision.models import ShuffleNet_V2_X1_0_Weights, shufflenet_v2_x1_0
 
-from training.src.models.components.loss_functions import FocalLoss
+from training.src.models.components.loss_functions import get_loss_function
 from training.src.models.components.model_class import Model
 
 torch.use_deterministic_algorithms(True, warn_only=True)
@@ -32,11 +32,7 @@ class ShuffleNetV2(Model):
     ):
         super().__init__()
 
-        # loss function
-        if loss_function == "cross_entropy":
-            self.criterion = torch.nn.CrossEntropyLoss()
-        elif loss_function == "focal":
-            self.criterion = FocalLoss(alpha=[0.1, 0.9], gamma=2.0)
+        self.criterion = get_loss_function(loss_function)
 
         backbone = shufflenet_v2_x1_0(weights=ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1)
         num_filters = backbone.fc.in_features
