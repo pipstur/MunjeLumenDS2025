@@ -47,7 +47,7 @@ git pull --rebase
 
 General adding, committing tips:
 - Use `git status` a lot to see what you're working with.
-- Use `git tree` to see what branch you're checked out to, so there is no mixup to what branch is being committed to.
+- Use `git tree` to see what branch you're checked out to (as well as the commit history), so there is no mixup to what branch it's being committed to.
 
 ## Visual Studio Code setup
 I suggest installing the following extensions, and configuring them in the settings:
