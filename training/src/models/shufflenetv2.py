@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torchvision.models import SqueezeNet1_1_Weights, squeezenet1_1
+from torchvision.models import ShuffleNet_V2_X1_0_Weights, shufflenet_v2_x1_0
 
 from training.src.models.components.loss_functions import get_loss_function
 from training.src.models.components.model_class import Model
@@ -8,7 +8,7 @@ from training.src.models.components.model_class import Model
 torch.use_deterministic_algorithms(True, warn_only=True)
 
 
-class SqueezeNet1_1(Model):
+class ShuffleNetV2(Model):
     """Implementation of LightningModule.
 
     A LightningModule organizes your PyTorch code into 6 sections:
@@ -34,10 +34,10 @@ class SqueezeNet1_1(Model):
 
         self.criterion = get_loss_function(loss_function)
 
-        backbone = squeezenet1_1(weights=SqueezeNet1_1_Weights.IMAGENET1K_V1)
-        num_filters = backbone.classifier[1].in_channels
+        backbone = shufflenet_v2_x1_0(weights=ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1)
+        num_filters = backbone.fc.in_features
 
-        self.feature_extractor = nn.Sequential(*list(backbone.features.children()))
+        self.feature_extractor = nn.Sequential(*list(backbone.children())[:-1])
 
         if freeze_layers:
             for param in self.feature_extractor.parameters():
@@ -52,5 +52,5 @@ if __name__ == "__main__":
     import pyrootutils
 
     root = pyrootutils.setup_root(__file__, pythonpath=True)
-    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "squeezenet1_1.yaml")
+    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "regnet_x_400mf.yaml")
     _ = hydra.utils.instantiate(cfg)
