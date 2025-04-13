@@ -19,6 +19,6 @@ hydra:
   sweeper:
     # define hyperparameter search space
     params:
-      model.optimizer.lr: choice(0.0001, 0.0001)
-      datamodule.batch_size: choice(128,256)
+      model.optimizer.lr: choice(0.0001, 0.00001)
+      datamodule.batch_size: choice(128, 256)
       model.optimizer.weight_decay: choice(0.0001)
