@@ -69,10 +69,9 @@ class MelanomaDataModule(LightningDataModule):
             transforms.RandomRotation(15),
             transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
             transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
-            # transforms.RandomVerticalFlip(),
-            # transforms.RandomResizedCrop(size=224, scale=(0.8, 1.0), ratio=(0.9, 1.1)),
-            # transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.5),
-            # transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
+            transforms.RandomVerticalFlip(),
+            transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.5),
+            transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
             # transforms.RandomErasing(p=0.3, scale=(0.02, 0.1), ratio=(0.3, 3.3)),
         ]
         trans_for_all = [

@@ -301,3 +301,35 @@ The streamlit app can be run locally, if you choose to iterate over it, this is 
 ```bash
 streamlit run app/streamlit_app.py
 ```
+
+## 3. Inference script
+The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
+
+```bash
+usage: inference.py [-h] --input-folder INPUT_FOLDER [--models-folder MODELS_FOLDER] [--output-csv OUTPUT_CSV] [--save-tiles-folder SAVE_TILES_FOLDER]
+                    [--soft-vote]
+
+ONNX Model Inference with Majority Voting
+
+options:
+  -h, --help            show this help message and exit
+  --input-folder INPUT_FOLDER
+                        Folder containing input images
+  --models-folder MODELS_FOLDER
+                        Folder containing ONNX models
+  --output-csv OUTPUT_CSV
+                        Path to save the output CSV
+  --save-tiles-folder SAVE_TILES_FOLDER
+                        Folder to save preprocessed image tiles
+  --soft-vote           Use soft voting for predictions
+```
+
+Example script run:
+
+```bash
+python inference/inference.py \
+--input-folder data/test/ \
+--models-folder models/ \
+--output-csv results.csv \
+--soft-vote
+```

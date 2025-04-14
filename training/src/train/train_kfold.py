@@ -104,6 +104,15 @@ def train_kfold(cfg: DictConfig, n_splits: int = 5) -> Tuple[dict, dict]:
         convert_tensor_to_float(metric_dict)
         metrics_sum = sum_metrics(metrics_sum, metric_dict)
 
+        if trainer.checkpoint_callback.best_model_path != "":
+            save_dir = Path(ckpt_path).parent
+            height, width = cfg.datamodule.tile_size
+            channels = 3
+            input_sample = torch.randn(1, channels, height, width)
+            model.to_onnx(
+                save_dir / "melanoma.onnx", input_sample=input_sample, export_params=True
+            )
+
     average_metrics = pd.DataFrame(fold_metrics).mean().to_dict()
     log.info(f"Average Metrics: {average_metrics}")
     metrics_avg = avg_metrics(metrics_sum, n_splits)
