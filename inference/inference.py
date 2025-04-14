@@ -124,7 +124,7 @@ def majority_vote(predictions: List[int]) -> int:
     return count.most_common(1)[0][0]
 
 
-def main(input_folder, models_folder, output_csv, save_tiles_folder=None):
+def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder=None):
     print("Loading models...")
     sessions = load_onnx_models(models_folder)
     if not sessions:
@@ -150,7 +150,7 @@ def main(input_folder, models_folder, output_csv, save_tiles_folder=None):
         image_tensor = prepare_image_tensor(image)
 
         predictions = predict_image(sessions, image_tensor)
-        if args.soft_vote:
+        if soft_voting:
             final_prediction = soft_vote(predictions)
         else:
             final_prediction = majority_vote(predictions)
@@ -196,6 +196,6 @@ if __name__ == "__main__":
         args.input_folder,
         args.models_folder,
         args.output_csv,
-        args.save_tiles_folder,
         args.soft_vote,
+        args.save_tiles_folder,
     )
