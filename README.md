@@ -4,6 +4,14 @@ All of the code, visualizations and other things that are important to the entir
 ## Hosted on Streamlit!
 The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.
 
+## Notebooks for Exploration and Visualization
+All the development and exploration notebooks have been moved to Google Colab for easier access.
+
+You can access them here:
+[📓 Open Notebooks Folder](https://drive.google.com/drive/folders/1V9zt9TOl94Q9HRKKbFNkbee14Y2-csFm?usp=sharing)
+
+*Tip*: Right-click on any notebook in the folder and select "Open with > Google Colab" to start experimenting immediately! This keeps the repository clean and makes it easier for collaborators to run notebooks without setting up the environment locally.
+
 ## Standards of committing and branching on the repository
 1. Developers create a feature branch from main.
 ```bash
@@ -90,9 +98,14 @@ source venv/bin/activate
 - Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### 0.2. Installing dependencies
-1. For the requirements, run the following command:
+1. For the training requirements, run the following command:
 ```bash
-pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
+```
+
+*Optional*: If you only want to run the models in inference, do:
+```bash
+pip install -r requirements/requirements_inference.txt
 ```
 
 2. Pre-commit install for local linting (flake8, black, isort) (Optional, Dev only):
