@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
+          pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
           pip install pre-commit
 
       - name: Install Pre-commit Hooks

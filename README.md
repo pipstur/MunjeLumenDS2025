@@ -90,9 +90,14 @@ source venv/bin/activate
 - Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
 ### 0.2. Installing dependencies
-1. For the requirements, run the following command:
+1. For the training requirements, run the following command:
 ```bash
-pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements.txt
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
+```
+
+*Optional*: If you only want to run the models in inference, do:
+```bash
+pip install -r requirements/requirements_inference.txt
 ```
 
 2. Pre-commit install for local linting (flake8, black, isort) (Optional, Dev only):
