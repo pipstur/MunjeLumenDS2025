@@ -263,11 +263,6 @@ def cli():
 if __name__ == "__main__":
     args = cli()
 
-    CSV_PATH = "/Users/mipopovic/Desktop/MunjeLumenDS2025/data/test_truth.csv"
-    IMAGE_FOLDER = "/Users/mipopovic/Desktop/MunjeLumenDS2025/data/test_output/train/benign/"
-    MASK_FOLDER = "/Users/mipopovic/Desktop/MunjeLumenDS2025/data/segmentation_mask/"
-    CSV_OUTPUT = "/Users/mipopovic/Desktop/MunjeLumenDS2025/data/skin_tone_estimates.csv"
-
     batch_predict_mask(
         args.csv_path, args.images_dir, args.masks_dir, args.model_path, tuple(args.image_size)
     )
