@@ -11,6 +11,7 @@ from keras.optimizers import Adam
 from PIL import Image
 from skimage import io
 from skimage.transform import resize
+from tqdm import tqdm
 
 root = pyrootutils.setup_root(
     search_from=__file__,
@@ -19,10 +20,19 @@ root = pyrootutils.setup_root(
     dotenv=True,
 )
 
+import logging
+
 from training.src.models.unet_segmentation import get_unet
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+
+log = logging.getLogger(__name__)
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
 def load_model(model_path, image_size):
+    log.info(f"Loading model: <{model_path}>")
     input_img = Input((image_size[0], image_size[1], 3))
     model = get_unet(input_img, n_filters=16, dropout=0.05, batchnorm=True)
     model.compile(optimizer=Adam(), loss="binary_crossentropy", metrics=["accuracy"])
@@ -64,7 +74,7 @@ def predict_mask(src_path, dest_path, model, image_size):
     X_test[0] = img_resized
 
     # Predict
-    predicted = model.predict(X_test, verbose=1)
+    predicted = model.predict(X_test, verbose=0)
     predicted_mask = (predicted > 0.5).astype(bool).squeeze()
 
     try:
@@ -86,7 +96,7 @@ def batch_predict_mask(
     os.makedirs(dest_dir, exist_ok=True)
 
     model = load_model(model_path, image_size)
-    for _, row in df.iterrows():
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Predicting lesion masks"):
         src_path = os.path.join(image_dir, row["image_name"])
 
         # Replace .jpg with .png in the destination file name
@@ -94,6 +104,8 @@ def batch_predict_mask(
         dest_path = os.path.join(dest_dir, base_name + ".png")
 
         predict_mask(src_path, dest_path, model, image_size)
+
+    log.info(f"Predicted masks saved to: <{dest_dir}>")
 
 
 def classify_skin_tone(ita_val):
@@ -169,7 +181,7 @@ def batch_predict_skin_color(
     df = pd.read_csv(csv_file)
     skin_tones = []
 
-    for _, row in df.iterrows():
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Predicting skin tone"):
         base_name = row["image_name"]
         image_path = os.path.join(image_dir, base_name + ".jpg")
         mask_path = os.path.join(mask_dir, base_name + ".png")
@@ -198,7 +210,7 @@ def batch_predict_skin_color(
 
     df["skin_tone"] = skin_tones
     df.to_csv(output_csv, index=False)
-    print(f"✅ Saved updated CSV to {output_csv}")
+    log.info(f"Predicted skin tones saved to CSV: <{output_csv}>")
 
 
 def cli():
