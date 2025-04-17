@@ -220,25 +220,25 @@ def cli():
     parser.add_argument(
         "--csv-path",
         type=str,
-        default="data/test_truth.csv",
+        default="data/get_data/merged_labels.csv",
         help="Path to the CSV file with labels.",
     )
     parser.add_argument(
         "--images-dir",
         type=str,
-        default="data/test_output/train/benign/",
+        default="data/get_data/images/",
         help="Directory containing input images.",
     )
     parser.add_argument(
         "--masks-dir",
         type=str,
-        default="data/segmentation_mask",
+        default="data/get_data/segmentation_mask",
         help="Directory to save masks of lesions.",
     )
     parser.add_argument(
         "--csv-out-path",
         type=str,
-        default="data/skin_tone_estimates.csv",
+        default="data/get_data/skin_tone_estimates.csv",
         help="Directory to save CSV with skin color predictions.",
     )
 
