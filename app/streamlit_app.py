@@ -1,3 +1,13 @@
+import pyrootutils
+
+root = pyrootutils.setup_root(
+    search_from=__file__,
+    indicator=[".pre-commit-config.yaml", ".git", ".github"],
+    pythonpath=True,
+    dotenv=True,
+)
+
+
 import warnings
 
 import numpy as np
@@ -6,6 +16,8 @@ import streamlit as st
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
+
+from img_utils.preprocessing import apply_clahe, resize_image
 
 warnings.filterwarnings("ignore")
 
@@ -25,9 +37,11 @@ def load_model() -> ort.InferenceSession:
 
 def preprocess_image(image: Image.Image) -> np.ndarray:
     """Preprocesses an image for the ONNX model."""
+    image = resize_image(image, IMAGE_SIZE, padding_flag=True)
+    image = apply_clahe(image, clip_limit=1.4, tile_grid_size=(8, 8))
+
     transform = transforms.Compose(
         [
-            transforms.Resize(IMAGE_SIZE),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
