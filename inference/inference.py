@@ -1,58 +1,31 @@
+import pyrootutils
+
+root = pyrootutils.setup_root(
+    search_from=__file__,
+    indicator=[".pre-commit-config.yaml", ".git", ".github"],
+    pythonpath=True,
+    dotenv=True,
+)
+
 import argparse
 import csv
 import os
 from collections import Counter
 from typing import List, Tuple
 
-import cv2
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
 from torchvision import transforms
 from tqdm import tqdm
 
+from img_utils.preprocessing import apply_clahe, resize_image
+
 PROVIDERS = ["CUDAExecutionProvider", "CPUExecutionProvider"]
 DEFAULT_IMAGE_SIZE = (224, 224)
 DEFAULT_PADDING_COLOR = (255, 255, 255)
-CLAHE_CLIP_LIMIT = 1.0
-CLAHE_TILE_GRID_SIZE = (5, 5)
-
-
-def resize_image(
-    image: Image.Image,
-    image_size: Tuple[int, int],
-    padding_flag: bool,
-    padding_color: Tuple[int, int, int] = DEFAULT_PADDING_COLOR,
-) -> Image.Image:
-    """Resize an image with optional padding to preserve aspect ratio."""
-    if padding_flag:
-        canvas_size = image_size
-        image.thumbnail(canvas_size, Image.LANCZOS)
-        canvas = Image.new("RGB", canvas_size, padding_color)
-        paste_x = (canvas_size[0] - image.size[0]) // 2
-        paste_y = (canvas_size[1] - image.size[1]) // 2
-        canvas.paste(image, (paste_x, paste_y))
-        return canvas
-    else:
-        return image.resize(image_size, Image.BILINEAR)
-
-
-def apply_clahe(
-    image: Image.Image,
-    clip_limit: float = CLAHE_CLIP_LIMIT,
-    tile_grid_size: Tuple[int, int] = CLAHE_TILE_GRID_SIZE,
-) -> Image.Image:
-    """Apply CLAHE to enhance the contrast of the image."""
-    image_np = np.array(image)
-    lab = cv2.cvtColor(image_np, cv2.COLOR_BGR2LAB)
-    l_channel, a_channel, b_channel = cv2.split(lab)
-
-    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
-    l_clahe = clahe.apply(l_channel)
-
-    lab_clahe = cv2.merge((l_clahe, a_channel, b_channel))
-    enhanced_image = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
-    return Image.fromarray(enhanced_image)
+CLAHE_CLIP_LIMIT = 1.4
+CLAHE_TILE_GRID_SIZE = (8, 8)
 
 
 def load_onnx_models(models_folder: str) -> List[ort.InferenceSession]:
@@ -72,7 +45,7 @@ def preprocess_image(
     """Preprocess the input image: resize and apply CLAHE."""
     image = Image.open(image_path).convert("RGB")
     image = resize_image(image, image_size, padding)
-    return apply_clahe(image)
+    return apply_clahe(image, clip_limit=CLAHE_CLIP_LIMIT, tile_grid_size=CLAHE_TILE_GRID_SIZE)
 
 
 def save_preprocessed_image(

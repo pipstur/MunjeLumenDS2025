@@ -318,6 +318,18 @@ streamlit run app/streamlit_app.py
 ## 3. Inference script
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
 
+### 3.1. Download the models
+You can download the released models using the `download_models.py` script:
+
+```bash
+python models/download_models.py \
+--repo-owner pipstur \
+--repo-name MunjeLumenDS2025 --release-tag v1.0.0 \
+--download-dir downloads/ \
+--extract-dir models/
+```
+
+### 3.2. Running the inference script
 ```bash
 usage: inference.py [-h] --input-folder INPUT_FOLDER [--models-folder MODELS_FOLDER] [--output-csv OUTPUT_CSV] [--save-tiles-folder SAVE_TILES_FOLDER]
                     [--soft-vote]
@@ -337,7 +349,7 @@ options:
   --soft-vote           Use soft voting for predictions
 ```
 
-Example script run:
+Example script run, assuming the images are inside the `data/test/` folder:
 
 ```bash
 python inference/inference.py \
