@@ -1,0 +1,17 @@
+{
+    "exclude": [
+      "**/venv",
+      "**/.venv",
+      "**/__pycache__",
+      "**/.git",
+      "**/.mypy_cache",
+      "**/.pytest_cache",
+      "**/node_modules",
+      "**/training/logs",
+      "**/outputs",
+      "**/*.onnx",
+      "**/*.pt",
+      "**/data/**",
+      "**/logs/**"
+    ]
+  }

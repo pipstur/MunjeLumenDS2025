@@ -1,6 +1,13 @@
 # MunjeLumenDS2025 Melanoma detection
 All of the code, visualizations and other things that are important to the entire solution can be found in this repository. The documentation will detail the different aspects of the entire pipeline.
 
+Training/evaluating was done with the following specs:
+```YAML
+CPU: Ryzen 5 5600
+GPU: GTX 1070 8 GB VRAM
+RAM: 48GB 3200mhz CL16
+```
+
 ## Hosted on Streamlit!
 The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.
 
@@ -66,9 +73,14 @@ I suggest installing the following extensions, and configuring them in the setti
 - RainbowCSV for easier viewing of `.csv` files.
 - vscode-pdf for easier viewing of `.pdf` files.
 
-## 1. Repository setup
+## 0. Repository setup
+On top of setting up the repository, you will also need the following CUDA requirements if you want to utilize the graphics card in inference and training:
+1. CUDA Toolkit 12.8
+2. cuDNN 9.x
+3. PATH fully set up
+4. NVIDIA graphics card drivers
 
-### Virtual environment setup
+### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
 
@@ -132,7 +144,6 @@ This ensures there's no need to run pre-commit each time (the linting happens au
 
 
 ## 1. Training pipeline
-
 ### 1.0. Getting the data
 The data will be downloaded, extracted and put into a format that's ready to be preparated.
 ```bash

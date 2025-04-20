@@ -83,7 +83,7 @@ def process_image_batch(
     os.makedirs(benign_dir, exist_ok=True)
     os.makedirs(malignant_dir, exist_ok=True)
 
-    tasks: List[Tuple[str, str, Tuple[int, int]], bool] = []
+    tasks: List[tuple[str, str, Tuple[int, int], bool, bool, bool]] = []
     for _, row in df.iterrows():
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])

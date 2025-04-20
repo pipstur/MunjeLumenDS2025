@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader
@@ -42,10 +42,10 @@ class MelanomaDataModule(LightningDataModule):
         batch_size: int = 64,
         imbalanced_sampling: bool = False,
         num_workers: int = 0,
-        tile_size: int = [224, 224],
+        tile_size: List[int] = [224, 224],
         pin_memory: bool = False,
         grayscale: bool = False,
-        dirs: str = ["train", "val", "test"],
+        dirs: List[str] = ["train", "val", "test"],
         train_da: bool = False,
         val_da: bool = False,
     ):
