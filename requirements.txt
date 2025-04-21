@@ -1,4 +1,3 @@
-# this requirements is for the hosted streamlit solution
 torchvision==0.21.0
 
 onnxruntime-gpu==1.21.0
