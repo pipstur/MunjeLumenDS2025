@@ -1,6 +1,6 @@
 torchvision==0.21.0
 
-onnxruntime-gpu==1.21.0
+onnxruntime==1.21.0
 onnx==1.17.0
 
 pyrootutils==1.0.4
