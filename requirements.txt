@@ -1,3 +1,4 @@
+# streamlit requirements
 torchvision==0.21.0
 
 onnxruntime==1.21.0
