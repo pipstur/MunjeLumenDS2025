@@ -25,7 +25,7 @@ jobs:
       - name: Build Docker Image
         if: github.event.pull_request.base.ref == 'main'
         run: |
-          docker build -t my-image-name .
+          docker build -t melanoma:build .
 
       - name: Install Pre-commit Hooks
         run: |
