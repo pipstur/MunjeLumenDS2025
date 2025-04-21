@@ -2,7 +2,7 @@ name: CI Checks
 
 on:
   pull_request:
-    branches: [main]  # Runs on merge requests to the main branch
+    branches: [main]  # Runs on pull requests targeting the main branch
 
 jobs:
   checks:
@@ -21,6 +21,11 @@ jobs:
         run: |
           pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
           pip install pre-commit
+
+      - name: Build Docker Image
+        if: github.event.pull_request.base.ref == 'main'
+        run: |
+          docker build -t my-image-name .
 
       - name: Install Pre-commit Hooks
         run: |
