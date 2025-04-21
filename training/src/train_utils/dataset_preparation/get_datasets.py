@@ -22,13 +22,16 @@ def download_file(url: str, output_path: str) -> None:
         response.raise_for_status()
         total_size = int(response.headers.get("content-length", 0))
 
-        with open(output_path, "wb") as file, tqdm(
-            desc=f"Downloading {os.path.basename(output_path)}",
-            total=total_size,
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
+        with (
+            open(output_path, "wb") as file,
+            tqdm(
+                desc=f"Downloading {os.path.basename(output_path)}",
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+            ) as bar,
+        ):
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
                 bar.update(len(chunk))
