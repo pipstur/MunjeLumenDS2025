@@ -31,9 +31,12 @@ jobs:
           pre-commit run --all-files
 
   docker-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build Docker Image
-        if: github.event.pull_request.base.ref == 'main'
-        run: |
-          docker build -t melanoma:build .
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Build Docker Image
+      if: github.event.pull_request.base.ref == 'main'
+      run: |
+        docker build -t melanoma:build .
