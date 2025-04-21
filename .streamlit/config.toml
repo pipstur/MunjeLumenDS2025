@@ -1,0 +1,2 @@
+[server]
+folderWatchBlacklist = ["venv", "home", "usr", "lib", "torch", "bin"]
