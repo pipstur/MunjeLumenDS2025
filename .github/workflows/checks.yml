@@ -20,12 +20,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
-          pip install pre-commit
-
-      - name: Build Docker Image
-        if: github.event.pull_request.base.ref == 'main'
-        run: |
-          docker build -t melanoma:build .
+          pip install pre-commit==2.13.0
 
       - name: Install Pre-commit Hooks
         run: |
@@ -34,3 +29,11 @@ jobs:
       - name: Run Pre-commit Checks
         run: |
           pre-commit run --all-files
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Docker Image
+        if: github.event.pull_request.base.ref == 'main'
+        run: |
+          docker build -t melanoma:build .

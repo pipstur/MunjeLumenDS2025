@@ -3,7 +3,9 @@
   "image": "mcr.microsoft.com/devcontainers/python:1-3.10-bullseye",
   "customizations": {
     "codespaces": {
-      "openFiles": ["README.md"]
+      "openFiles": [
+        "README.md"
+      ]
     },
     "vscode": {
       "settings": {
@@ -23,14 +25,16 @@
           "--profile",
           "black"
         ],
-        "black-formatter.path": ["/workspaces/MunjeLumenDS2025/venv/bin/black"],
+        "black-formatter.path": [
+          "/workspaces/MunjeLumenDS2025/venv/bin/black"
+        ],
         "python.formatting.provider": "none",
         "python.defaultInterpreterPath": "/workspaces/MunjeLumenDS2025/venv/bin/python",
         "editor.formatOnSave": true,
         "notebook.formatOnSave.enabled": true,
         "editor.defaultFormatter": "ms-python.black-formatter",
         "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
+          "editor.defaultFormatter": "ms-python.black-formatter"
         },
         "black-formatter.showTrace": true,
         "python.jediEnabled": true,
@@ -74,7 +78,8 @@
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
         "ms-python.isort",
-        "ms-python.flake8"
+        "ms-python.flake8",
+        "tomoki1207.vscode-pdf"
       ]
     }
   },
@@ -89,9 +94,7 @@
   ],
   "postCreateCommand": "chmod +x .devcontainer/initialize.sh && bash .devcontainer/initialize.sh",
   "remoteUser": "vscode",
-"remoteEnv": {
-  "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
-}
-
-
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
+  }
 }
