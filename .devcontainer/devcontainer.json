@@ -23,22 +23,22 @@
           "--profile",
           "black"
         ],
-        "python.formatting.blackPath": "venv/bin/black",
-        "python.formatting.provider": "black",
+        "black-formatter.path": ["/workspaces/MunjeLumenDS2025/venv/bin/black"],
+        "python.formatting.provider": "none",
         "python.defaultInterpreterPath": "/workspaces/MunjeLumenDS2025/venv/bin/python",
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
         "notebook.formatOnSave.enabled": true,
         "editor.defaultFormatter": "ms-python.black-formatter",
-        "python.analysis.enableSyncServer": true,
+        "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+        },
+        "black-formatter.showTrace": true,
         "python.jediEnabled": true,
-        "python.analysis.autoImportCompletions": true,
-        "python.analysis.memory.keepLibraryAst": false,
         "interactiveWindow.executeWithShiftEnter": true,
         "jupyter.enableExtendedPythonKernelCompletions": true,
         "python.languageServer": "Pylance",
         "extensions.autoCheckUpdates": false,
         "update.showReleaseNotes": false,
-        "python.analysis.enablePytestSupport": false,
         "files.watcherExclude": {
           "**/.git/objects/**": true,
           "**/node_modules/**": true,
@@ -62,14 +62,6 @@
         "isort.importStrategy": "fromEnvironment",
         "black-formatter.importStrategy": "fromEnvironment",
         "black.importStrategy": "fromEnvironment",
-        "python.analysis.exclude": [
-          "**/devenv",
-          "**/.git",
-          "**/__pycache__",
-          "**/node_modules",
-          "**/data/**",
-          "**/logs/**"
-        ],
         "files.eol": "\n",
         "python.analysis.diagnosticSeverityOverrides": {
           "reportAttributeAccessIssue": "none",
@@ -95,7 +87,7 @@
     8501,
     6006
   ],
-  "postCreateCommand": "bash .devcontainer/initialize.sh",
+  "postCreateCommand": "chmod +x .devcontainer/initialize.sh && bash .devcontainer/initialize.sh",
   "remoteUser": "vscode",
 "remoteEnv": {
   "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"

@@ -1,5 +1,5 @@
 {
-    "exclude": [
+  "exclude": [
       "**/venv",
       "**/.venv",
       "**/__pycache__",
@@ -13,5 +13,8 @@
       "**/*.pt",
       "**/data/**",
       "**/logs/**"
-    ]
-  }
+  ],
+  "typeCheckingMode": "off",
+  "reportOptionalMemberAccess": "none",
+  "reportAttributeAccessIssue": "none"
+}
