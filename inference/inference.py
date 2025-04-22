@@ -80,21 +80,36 @@ def predict_image(sessions: List[ort.InferenceSession], image_tensor: np.ndarray
     return predictions
 
 
-def soft_vote(predictions: List[np.ndarray]) -> int:
-    """Aggregate predictions using soft voting."""
+def soft_vote(predictions: List[np.ndarray]) -> Tuple[int, float]:
+    """Aggregate predictions using soft voting.
+
+    Returns:
+        - final_prediction: int (the predicted class)
+        - confidence: float (the probability of the selected class)
+    """
     probabilities = [np.exp(logits) / np.sum(np.exp(logits)) for logits in predictions]
-
     avg_prob = np.mean(probabilities, axis=0)
+
     final_prediction = int(np.argmax(avg_prob))
+    confidence = float(avg_prob[final_prediction])
 
-    return final_prediction
+    return final_prediction, confidence
 
 
-def majority_vote(predictions: List[int]) -> int:
-    """Aggregate predictions using majority voting."""
+def majority_vote(predictions: List[np.ndarray]) -> Tuple[int, float]:
+    """Aggregate predictions using majority voting.
+
+    Returns:
+        - final_prediction: int (the predicted class)
+        - confidence: float (proportion of votes for that class)
+    """
     class_predictions = [int(np.argmax(p)) for p in predictions]
     count = Counter(class_predictions)
-    return count.most_common(1)[0][0]
+
+    final_prediction, num_votes = count.most_common(1)[0]
+    confidence = num_votes / len(class_predictions)
+
+    return final_prediction, confidence
 
 
 def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder=None):
@@ -124,9 +139,9 @@ def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder
 
         predictions = predict_image(sessions, image_tensor)
         if soft_voting:
-            final_prediction = soft_vote(predictions)
+            final_prediction, confidence = soft_vote(predictions)
         else:
-            final_prediction = majority_vote(predictions)
+            final_prediction, confidence = majority_vote(predictions)
 
         benign_malignant = "benign" if final_prediction == 0 else "malignant"
 
@@ -134,11 +149,12 @@ def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder
             {
                 "image_name": original_filename.replace(".jpg", ""),
                 "benign_malignant": benign_malignant,
+                "confidence": confidence,
             }
         )
 
     with open(output_csv, mode="w", newline="") as csv_file:
-        fieldnames = ["image_name", "benign_malignant"]
+        fieldnames = ["image_name", "benign_malignant", "confidence"]
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
