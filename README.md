@@ -31,6 +31,8 @@ You can access them here:
 Consult the `readme/` folder for other information about the repository, such as:
 - Setting up the environment
 - Developer rules for git flow
+- Getting the data
+- Generating datasets for training
 - Training the models
 - Evaluating the models
 - Running inference using `onnx-runtime`

@@ -1,4 +1,4 @@
-## 1. Standards of committing and branching on the repository
+## Standards of committing and branching on the repository
 1. Developers create a feature branch from main.
 ```bash
 git checkout -b name/feature

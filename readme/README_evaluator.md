@@ -1,9 +1,7 @@
 ## Inference script
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
 
-### Download the models
 You can download the released models using the `download_models.py` script:
-
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
@@ -12,9 +10,7 @@ python models/download_models.py \
 --extract-dir models/
 ```
 
-### Running the inference script
 Example script run, assuming the images are inside the `data/test/` folder:
-
 ```bash
 python inference/inference.py \
 --input-folder data/test/ \
@@ -26,6 +22,25 @@ python inference/inference.py \
 ## Model training
 If the evaluator wishes to train the models, he can simply run the following command, everything is already set-up for him, if he followed the environment instructions closely, or is running inside a `devcontainer`.
 
+He will need download the data first, using the following command:
+```bash
+python training/src/train_utils/dataset_preparation/get_datasets.py \
+--output-dir data/get_data/
+```
+Then generate the training dataset:
+```bash
+python training/src/train_utils/dataset_preparation/dataset_preparation.py \
+    --csv-path data/get_data/merged_labels.csv \
+    --images-dir data/get_data/images/ \
+    --output-dir data/kfold_train/ \
+    --image-size 224 224 \
+    --seed 27 \
+    --kfold 5 \
+    --split-type kfold \
+    --apply-clahe \
+    --padding
+```
+And then run the training:
 ```bash
 chmod +x schedule_training.sh
 ./schedule_training.sh

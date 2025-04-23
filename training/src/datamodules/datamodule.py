@@ -72,7 +72,6 @@ class MelanomaDataModule(LightningDataModule):
             transforms.RandomVerticalFlip(),
             transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.5),
             transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
-            # transforms.RandomErasing(p=0.3, scale=(0.02, 0.1), ratio=(0.3, 3.3)),
         ]
         trans_for_all = [
             transforms.ToTensor(),
