@@ -22,7 +22,7 @@ root = pyrootutils.setup_root(
 
 import logging
 
-from training.src.models.unet_segmentation import get_unet
+from training.src.train_utils.segmentation.unet_segmentation import get_unet
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
