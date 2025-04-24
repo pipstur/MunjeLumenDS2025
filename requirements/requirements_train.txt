@@ -7,7 +7,7 @@ lightning==2.5.0.post0
 
 tensorflow==2.9.0
 keras==2.9.0
-tensorboard==2.19.0
+tensorboard==2.9.1
 
 onnx==1.17.0
 onnxruntime-gpu==1.21.0
