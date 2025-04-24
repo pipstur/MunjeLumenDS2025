@@ -2,7 +2,7 @@ name: CI Checks
 
 on:
   pull_request:
-    branches: [main]  # Runs on merge requests to the main branch
+    branches: [main]  # Runs on pull requests targeting the main branch
 
 jobs:
   checks:
@@ -20,7 +20,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
-          pip install pre-commit
+          pip install pre-commit==2.13.0
 
       - name: Install Pre-commit Hooks
         run: |
@@ -29,3 +29,14 @@ jobs:
       - name: Run Pre-commit Checks
         run: |
           pre-commit run --all-files
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        if: github.event.pull_request.base.ref == 'main'
+        run: |
+          docker build -t melanoma:build .

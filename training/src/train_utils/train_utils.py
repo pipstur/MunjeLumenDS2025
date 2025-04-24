@@ -218,7 +218,7 @@ def sum_metrics(previous_sum: dict, new_metrics: dict) -> dict:
     return new_sum
 
 
-def avg_metrics(metrics_sum: dict, num_folds: dict) -> dict:
+def avg_metrics(metrics_sum: dict, num_folds: int) -> dict:
     avg_metrics = {}
     for k, v in metrics_sum.items():
         avg_metrics[k] = round(v / num_folds, 5)

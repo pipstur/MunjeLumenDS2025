@@ -16,7 +16,7 @@ from typing import List, Tuple
 
 import pandas as pd
 from PIL import Image
-from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from tqdm import tqdm
 
 from img_utils.preprocessing import apply_clahe, remove_hair, resize_image
@@ -83,7 +83,7 @@ def process_image_batch(
     os.makedirs(benign_dir, exist_ok=True)
     os.makedirs(malignant_dir, exist_ok=True)
 
-    tasks: List[Tuple[str, str, Tuple[int, int]], bool] = []
+    tasks: List[tuple[str, str, Tuple[int, int], bool, bool, bool]] = []
     for _, row in df.iterrows():
         dest_dir = benign_dir if row["benign_malignant"] == "benign" else malignant_dir
         src_path = os.path.join(image_dir, row["image_name"])
@@ -168,7 +168,7 @@ def standard_split(
 
 def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> None:
     """
-    Perform stratified k-fold split with separate test sets for each fold.
+    Perform initial 90/10 train/test split, then Stratified K-Fold (train/val) on train data.
 
     Args:
         dataset_dir (str): Path to dataset containing "benign" and "malignant" folders.
@@ -186,29 +186,28 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
 
     df = pd.DataFrame(df, columns=["image_name", "label"])
 
+    train_val_df, test_df = train_test_split(
+        df, test_size=0.1, stratify=df["label"], random_state=seed
+    )
+
+    print(f"Initial split: {len(train_val_df)} train_val, {len(test_df)} test")
+
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
 
-    for fold, (train_val_idx, test_idx) in enumerate(skf.split(df["image_name"], df["label"])):
+    for fold, (train_idx, val_idx) in enumerate(
+        skf.split(train_val_df["image_name"], train_val_df["label"])
+    ):
         fold_dir = os.path.join(output_dir, f"fold{fold+1}")
-        train_dir, val_dir, test_dir = (
-            os.path.join(fold_dir, "train"),
-            os.path.join(fold_dir, "val"),
-            os.path.join(fold_dir, "test"),
-        )
+        train_dir = os.path.join(fold_dir, "train")
+        val_dir = os.path.join(fold_dir, "val")
+        test_dir = os.path.join(fold_dir, "test")
 
         for d in [train_dir, val_dir, test_dir]:
             os.makedirs(os.path.join(d, "benign"), exist_ok=True)
             os.makedirs(os.path.join(d, "malignant"), exist_ok=True)
 
-        # Split train_val further into training and validation sets
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
-        train_idx, val_idx = next(
-            sss.split(df.iloc[train_val_idx]["image_name"], df.iloc[train_val_idx]["label"])
-        )
-
-        # Move test images
         for img_name, label in tqdm(
-            df.iloc[test_idx][["image_name", "label"]].values,
+            test_df[["image_name", "label"]].values,
             desc=f"Processing fold {fold+1} (test)",
             leave=False,
         ):
@@ -216,12 +215,12 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
             dest_path = os.path.join(test_dir, label, img_name)
             shutil.copy(src_path, dest_path)
 
-        for indices, split_dir, split_name in [
+        for split_indices, split_dir, split_name in [
             (train_idx, train_dir, "train"),
             (val_idx, val_dir, "val"),
         ]:
             for img_name, label in tqdm(
-                df.iloc[train_val_idx].iloc[indices][["image_name", "label"]].values,
+                train_val_df.iloc[split_indices][["image_name", "label"]].values,
                 desc=f"Processing fold {fold+1} ({split_name})",
                 leave=False,
             ):
@@ -229,7 +228,7 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
                 dest_path = os.path.join(split_dir, label, img_name)
                 shutil.copy(src_path, dest_path)
 
-        print(f"Fold {fold+1}: {len(train_idx)} train, {len(val_idx)} val, {len(test_idx)} test")
+        print(f"Fold {fold+1}: {len(train_idx)} train, {len(val_idx)} val, {len(test_df)} test")
 
     shutil.rmtree(os.path.join(output_dir, "benign"))
     shutil.rmtree(os.path.join(output_dir, "malignant"))

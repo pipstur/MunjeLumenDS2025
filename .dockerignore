@@ -1,0 +1,51 @@
+# Python
+**/__pycache__/**
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtualenvs
+**/.venv/**
+**/venv/**
+**/env/**
+**/ENV/**
+*.egg-info/
+
+# Git
+.gitignore
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets, models
+*.zip
+*.tar
+*.tar.gz
+*.h5
+*.hdf5
+*.pth
+*.pt
+*.onnx
+*.pkl
+*.npz
+*.npy
+*.ckpt
+*.weights
+
+# Folders
+**/downloads/**
+**/data/**
+**/results/**
+**/logs/**
+saved_models/
+checkpoints/
+cache/
+.cache/
+build/
+dist/
+
+# Misc
+*.log
+*.db
+*.swp
+.DS_Store

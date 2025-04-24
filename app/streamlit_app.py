@@ -21,7 +21,7 @@ from img_utils.preprocessing import apply_clahe, resize_image
 
 warnings.filterwarnings("ignore")
 
-MODEL_FOLDER = "models/"
+MODEL_FOLDER = "models/included_models"
 IMAGE_SIZE = (224, 224)
 CLASS_NAMES = ["Benign", "Malignant"]
 REFERENCE_IMAGE_URL = (

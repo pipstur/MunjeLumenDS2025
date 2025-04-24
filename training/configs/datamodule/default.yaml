@@ -5,7 +5,7 @@ batch_size: 128
 imbalanced_sampling: False # If True, the data loader will sample the data in a way that the classes are balanced
 num_workers: 6 # Number of (virtual) CPU cores to use for data loading
 tile_size: [224, 224] # This is used for the exporting of the model to ONNX mainly. It is the size of the input image.
-pin_memory: True # If True, the data loader will copy Tensors into CUDA pinned memory before returning them.
+pin_memory: False # If True, the data loader will copy Tensors into CUDA pinned memory before returning them.
 grayscale: False
 train_da: True
 val_da: False
