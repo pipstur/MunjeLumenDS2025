@@ -7,7 +7,6 @@ lightning==2.5.0.post0
 
 #Tensor ecosystem
 tensorflow==2.19.0
-keras==2.19.0
 tensorboard==2.19.0
 protobuf==4.23.4
 
