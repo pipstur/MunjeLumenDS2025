@@ -1,0 +1,10 @@
+torchvision==0.21.0
+
+onnxruntime-gpu==1.21.0
+onnx==1.17.0
+
+pyrootutils==1.0.4
+tqdm==4.67.1
+pillow==11.0.0
+numpy==1.26.4
+opencv-python==4.9.0.80
