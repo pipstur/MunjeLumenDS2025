@@ -5,6 +5,7 @@ torchmetrics==1.6.2
 torchsampler==0.1.2
 lightning==2.5.0.post0
 
+#Tensor ecosystem
 tensorflow==2.19.0
 keras==2.19.0
 tensorboard==2.19.0
