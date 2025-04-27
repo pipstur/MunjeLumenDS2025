@@ -68,6 +68,14 @@ I suggest installing the following extensions, and configuring them in the setti
 
 This ensures there's no need to run pre-commit each time (the linting happens automatically most of the time, because of the extensions), consequently making the code versioning part a little less daunting.
 
+### 0.4. Notebooks for Exploration and Visualization
+All the development and exploration notebooks have been moved to Google Colab for easier access.
+
+You can access them here:
+[📓 Open Notebooks Folder](https://drive.google.com/drive/folders/1V9zt9TOl94Q9HRKKbFNkbee14Y2-csFm?usp=sharing)
+
+*Tip*: Right-click on any notebook in the folder and select "Open with > Google Colab" to start experimenting immediately! This keeps the repository clean and makes it easier for collaborators to run notebooks without setting up the environment locally.
+
 
 ## 1. Training pipeline
 ### 1.0. Getting the data
