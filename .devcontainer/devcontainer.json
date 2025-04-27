@@ -93,7 +93,7 @@
     8501,
     6006
   ],
-  "postCreateCommand": "sudo chmod +x .devcontainer/initialize.sh && bash .devcontainer/initialize.sh",
+  "postCreateCommand": "bash .devcontainer/initialize.sh",
   "remoteUser": "vscode",
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
