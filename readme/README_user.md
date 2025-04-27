@@ -5,7 +5,7 @@ On top of setting up the repository, you will also need the following CUDA requi
 3. PATH fully set up
 4. NVIDIA graphics card drivers
 
-**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We highly recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker` for this (but you will be prompted to install it, if you do not have it). This is in the cases when you're running VSCode, this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work, so resort to building the environment locally.
+**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker` for this (but you will be prompted to install it, if you do not have it). This is in the cases when you're running VSCode, this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work well, so resort to building the environment locally.
 
 ### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.

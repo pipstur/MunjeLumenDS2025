@@ -1,9 +1,12 @@
 ## Environment setup
-Either use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup). Or do it manually, using the following commands:
+### Approaches to environment setup
+There are two approaches to running this project:
+1. Use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup).
+2. Create a virtual environment locally
 
-### Virtual environment setup
-Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
+The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu).
 
+The second option (creating virutal env locally) requires a few steps:
 1. To create and activate a virtual environment run the following, based on your operating system:
 - Windows (cmd):
 ```bash
@@ -28,7 +31,7 @@ source venv/bin/activate
 
 - Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
 
-### Installing dependencies
+After installing and activating the virtual environment, the next step is installing dependencies:
 1. For the training requirements, run the following command:
 ```bash
 pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
