@@ -1,3 +1,44 @@
+## Environment setup
+Either use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup). Or do it manually, using the following commands:
+
+### Virtual environment setup
+Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
+
+1. To create and activate a virtual environment run the following, based on your operating system:
+- Windows (cmd):
+```bash
+python3 -m venv venv
+venv\Scripts\activate
+```
+- Windows (PowerShell):
+```bash
+python3 -m venv venv
+venv\Scripts\Activate.ps1
+```
+- Windows (Git Bash):
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
+- Linux/macOS:
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+- Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
+
+### Installing dependencies
+1. For the training requirements, run the following command:
+```bash
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
+```
+
+*Optional*: If you only want to run the models in inference, do:
+```bash
+pip install -r requirements/requirements_inference.txt
+```
+
 ## Inference script
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
 
@@ -5,7 +46,7 @@ You can download the released models using the `download_models.py` script:
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v1.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
 --download-dir downloads/ \
 --extract-dir models/
 ```
@@ -18,6 +59,8 @@ python inference/inference.py \
 --output-csv results/inference_results.csv \
 --soft-vote
 ```
+
+*Note*: If you do not have CUDA requirements highlighted in the `README_user.md`, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
 
 ## Model training
 If the evaluator wishes to train the models, he can simply run the following command, everything is already set-up for him, if he followed the environment instructions closely, or is running inside a `devcontainer`.

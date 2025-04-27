@@ -7,11 +7,11 @@
       "**/.mypy_cache",
       "**/.pytest_cache",
       "**/node_modules",
-      "**/training/logs",
+      "training/logs/**",
       "**/outputs",
       "**/*.onnx",
       "**/*.pt",
-      "**/data/**",
+      "data/**",
       "**/logs/**"
   ],
   "typeCheckingMode": "off",

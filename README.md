@@ -7,6 +7,19 @@ CPU: Ryzen 5 5600
 GPU: GTX 1070 8 GB VRAM
 RAM: 48GB 3200mhz CL16
 ```
+But it has been tested to work on the minimum:
+```YAML
+CPU: Macbook Intel, Ryzen 4500U
+RAM: 16GB (for the devcontainer), 8GB for native setup
+ROM: On HDD
+GPU: Integrated graphics
+```
+
+## Clone the repo
+Clone the repository using the following command in any terminal where git is available:
+```bash
+git clone https://github.com/pipstur/MunjeLumenDS2025.git
+```
 
 ## Hosted on Streamlit!
 The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.

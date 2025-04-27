@@ -5,7 +5,7 @@ On top of setting up the repository, you will also need the following CUDA requi
 3. PATH fully set up
 4. NVIDIA graphics card drivers
 
-**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We highly recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker Desktop` for this, so keep that in mind. This is in the cases when you're running VSCode, this allows for extremely easy integration.
+**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We highly recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker` for this (but you will be prompted to install it, if you do not have it). This is in the cases when you're running VSCode, this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work, so resort to building the environment locally.
 
 ### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
@@ -261,7 +261,7 @@ You can download the released models using the `download_models.py` script:
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v1.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
 --download-dir downloads/ \
 --extract-dir models/
 ```
@@ -296,8 +296,48 @@ python inference/inference.py \
 --soft-vote
 ```
 
+*Note*: If you do not have CUDA requirements highlighted in this README, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
+
 ## 3. Running the Streamlit app locally
 The streamlit app can be run locally, if you choose to iterate over it, this is done by the following command:
 ```bash
 streamlit run app/streamlit_app.py
+```
+
+## 4. Segmentation and skin color estimation
+### 4.1. Preparing the environment
+To run segmentation of lesions, first use the following commands to create a new virtual environment (this is because Tensorflow and PyTorch have some weird CUDA conflicts):
+- Windows (cmd):
+```bash
+python3 -m venv segmentation-venv
+segmentation-venv\Scripts\activate
+```
+- Windows (PowerShell):
+```bash
+python3 -m venv segmentation-venv
+segmentation-venv\Scripts\Activate.ps1
+```
+- Windows (Git Bash):
+```bash
+python -m venv segmentation-venv
+source segmentation-venv/Scripts/activate
+```
+- Linux/macOS:
+```bash
+python -m venv segmentation-venv
+source segmentation-venv/bin/activate
+```
+And then install the requirements:
+```bash
+pip install -r requirements/requirements_segmentation.txt
+```
+
+### 4.2. Running the segmentation script
+Example run of the segmentation script which will result in a `.csv` file from which you can get the skin color information.
+```bash
+python training/src/train_utils/segmentation/segmentation_skin_color_analysis.py \
+--csv-path data/get_data/merged_labels.csv \
+--images-dir data/get_data/images/ \
+--masks-dir data/segmentation_masks/ \
+--csv-out-path results/skin_color_estimates.csv
 ```
