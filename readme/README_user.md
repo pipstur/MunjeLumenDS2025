@@ -1,12 +1,17 @@
 ## 0. Repository setup
 On top of setting up the repository, you will also need the following CUDA requirements if you want to utilize the graphics card in inference and training:
-1. CUDA Toolkit 12.8
+1. CUDA Toolkit 12.x
 2. cuDNN 9.x
 3. PATH fully set up
 4. NVIDIA graphics card drivers
 
-**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker` for this (but you will be prompted to install it, if you do not have it). This is in the cases when you're running VSCode, this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work well, so resort to building the environment locally.
+There are two approaches to running this project:
+1. Use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup).
+2. Create a virtual environment locally
 
+The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu). This is in the cases when you're running VSCode, as this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work well, so resort to building the environment locally. Also important to note that if you're running a GPU setup with no NVIDIA card, it might not build (check the comment in `.devcontainer/devcontainer.json` for the fix).
+
+The second option (creating virutal env locally) requires a few steps, it will be described in the following chapter.
 ### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
