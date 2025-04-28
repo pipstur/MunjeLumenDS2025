@@ -43,6 +43,24 @@ Consult the `readme/` folder for other information about the repository, such as
 - Running inference using `onnx-runtime`
 - etc.
 
+## Documentation
+The `documentation` folder contains detailed PDFs covering key aspects of the project, including:
+
+- Technical specifications
+- Methodology overview
+- Exploratory Data Analysis (EDA) report
+- Model evaluation report
+- Fairness analysis report
+
+## Notebooks for Exploration and Visualization
+All the development and exploration notebooks have been moved to Google Colab for easier access.
+
+You can access them here:
+[📓 Open Notebooks Folder](https://drive.google.com/drive/folders/1V9zt9TOl94Q9HRKKbFNkbee14Y2-csFm?usp=sharing)
+
+*Tip*: Right-click on any notebook in the folder and select "Open with > Google Colab" to start experimenting immediately! This keeps the repository clean and makes it easier for collaborators to run notebooks without setting up the environment locally.
+
+
 ## Future work
 1. Explore model optimization methods (Quantization, Model Pruning).
 2. Explore larger or different architectures (ResNet, ConvNext).
