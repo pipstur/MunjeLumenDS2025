@@ -46,7 +46,7 @@ source venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
 ```
 
-*Optional*: If you only want to run the models in inference, do:
+*Optional*: If you only want to run the models in inference (using the `inference/predict.py` script), do:
 ```bash
 pip install -r requirements/requirements_inference.txt
 ```
@@ -302,11 +302,7 @@ options:
 Example script run, assuming the images are inside the `data/test/` folder:
 
 ```bash
-python inference/inference.py \
---input-folder data/test/ \
---models-folder models/ \
---output-csv results/inference_results.csv \
---soft-vote
+python inference/predict.py data/test/ results/output_csv.csv
 ```
 
 *Note*: If you do not have CUDA requirements highlighted in this README, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.

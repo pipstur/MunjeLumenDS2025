@@ -43,7 +43,7 @@ pip install -r requirements/requirements_inference.txt
 ```
 
 ## Inference script
-The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
+The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `output_csv.csv` file as described in the competition specifications.
 
 You can download the released models using the `download_models.py` script:
 ```bash
@@ -56,11 +56,7 @@ python models/download_models.py \
 
 Example script run, assuming the images are inside the `data/test/` folder:
 ```bash
-python inference/inference.py \
---input-folder data/test/ \
---models-folder models/ \
---output-csv results/inference_results.csv \
---soft-vote
+python inference/predict.py data/inference_test/ results/output_csv.csv
 ```
 
 *Note*: If you do not have CUDA requirements highlighted in the `README_user.md`, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
