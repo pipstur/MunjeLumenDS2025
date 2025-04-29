@@ -10,7 +10,6 @@ root = pyrootutils.setup_root(
 import argparse
 import csv
 import os
-from collections import Counter
 from typing import List, Tuple
 
 import numpy as np
@@ -92,27 +91,12 @@ def soft_vote(predictions: List[np.ndarray]) -> Tuple[int, float]:
 
     final_prediction = int(np.argmax(avg_prob))
     confidence = float(avg_prob[final_prediction])
-
+    if final_prediction == 0:
+        confidence = 1 - confidence
     return final_prediction, confidence
 
 
-def majority_vote(predictions: List[np.ndarray]) -> Tuple[int, float]:
-    """Aggregate predictions using majority voting.
-
-    Returns:
-        - final_prediction: int (the predicted class)
-        - confidence: float (proportion of votes for that class)
-    """
-    class_predictions = [int(np.argmax(p)) for p in predictions]
-    count = Counter(class_predictions)
-
-    final_prediction, num_votes = count.most_common(1)[0]
-    confidence = num_votes / len(class_predictions)
-
-    return final_prediction, confidence
-
-
-def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder=None):
+def main(input_folder, models_folder, output_csv, save_tiles_folder=None):
     print("Loading models...")
     sessions = load_onnx_models(models_folder)
     if not sessions:
@@ -138,23 +122,18 @@ def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder
         image_tensor = prepare_image_tensor(image)
 
         predictions = predict_image(sessions, image_tensor)
-        if soft_voting:
-            final_prediction, confidence = soft_vote(predictions)
-        else:
-            final_prediction, confidence = majority_vote(predictions)
-
-        benign_malignant = "benign" if final_prediction == 0 else "malignant"
+        final_prediction, confidence = soft_vote(predictions)
 
         results.append(
             {
                 "image_name": original_filename.replace(".jpg", ""),
-                "benign_malignant": benign_malignant,
+                "target": final_prediction,
                 "confidence": confidence,
             }
         )
 
     with open(output_csv, mode="w", newline="") as csv_file:
-        fieldnames = ["image_name", "benign_malignant", "confidence"]
+        fieldnames = ["image_name", "target", "confidence"]
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
@@ -164,27 +143,21 @@ def main(input_folder, models_folder, output_csv, soft_voting, save_tiles_folder
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ONNX Model Inference with Majority Voting")
-    parser.add_argument(
-        "--input-folder", type=str, required=True, help="Folder containing input images"
-    )
+    parser.add_argument("input_folder", type=str, help="Folder containing input images")
+    parser.add_argument("output_csv", type=str, help="Path to save the output CSV")
     parser.add_argument(
         "--models-folder", type=str, default="models/", help="Folder containing ONNX models"
-    )
-    parser.add_argument(
-        "--output-csv", type=str, default="results.csv", help="Path to save the output CSV"
     )
     parser.add_argument(
         "--save-tiles-folder",
         type=str,
         help="Folder to save preprocessed image tiles",
     )
-    parser.add_argument("--soft-vote", action="store_true", help="Use soft voting for predictions")
     args = parser.parse_args()
 
     main(
         args.input_folder,
         args.models_folder,
         args.output_csv,
-        args.soft_vote,
         args.save_tiles_folder,
     )

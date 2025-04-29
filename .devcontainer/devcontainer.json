@@ -84,6 +84,7 @@
     }
   },
   "runArgs": [
+    // if running in a system with no NVIDIA GPU, comment the following 2 lines (it will possibly break initially)
     "--gpus",
     "all",
     "--shm-size=36g"
@@ -92,7 +93,7 @@
     8501,
     6006
   ],
-  "postCreateCommand": "chmod +x .devcontainer/initialize.sh && bash .devcontainer/initialize.sh",
+  "postCreateCommand": "bash .devcontainer/initialize.sh",
   "remoteUser": "vscode",
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"

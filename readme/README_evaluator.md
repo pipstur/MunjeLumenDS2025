@@ -1,23 +1,65 @@
+## Environment setup
+### Approaches to environment setup
+There are two approaches to running this project:
+1. Use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup).
+2. Create a virtual environment locally
+
+The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu).
+
+The second option (creating virutal env locally) requires a few steps:
+1. To create and activate a virtual environment run the following, based on your operating system:
+- Windows (cmd):
+```bash
+python3 -m venv venv
+venv\Scripts\activate
+```
+- Windows (PowerShell):
+```bash
+python3 -m venv venv
+venv\Scripts\Activate.ps1
+```
+- Windows (Git Bash):
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
+- Linux/macOS:
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+- Note: To deactivate a virtual environment, simply run `deactivate` in the terminal.
+
+After installing and activating the virtual environment, the next step is installing dependencies:
+1. For the training requirements, run the following command:
+```bash
+pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
+```
+
+*Optional*: If you only want to run the models in inference, do:
+```bash
+pip install -r requirements/requirements_inference.txt
+```
+
 ## Inference script
-The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
+The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `output_csv.csv` file as described in the competition specifications.
 
 You can download the released models using the `download_models.py` script:
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v1.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
 --download-dir downloads/ \
 --extract-dir models/
 ```
 
 Example script run, assuming the images are inside the `data/test/` folder:
 ```bash
-python inference/inference.py \
---input-folder data/test/ \
---models-folder models/ \
---output-csv results/inference_results.csv \
---soft-vote
+python inference/predict.py data/inference_test/ results/output_csv.csv
 ```
+
+*Note*: If you do not have CUDA requirements highlighted in the `README_user.md`, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
 
 ## Model training
 If the evaluator wishes to train the models, he can simply run the following command, everything is already set-up for him, if he followed the environment instructions closely, or is running inside a `devcontainer`.

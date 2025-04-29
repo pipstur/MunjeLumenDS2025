@@ -4,11 +4,7 @@ torchaudio==2.6.0
 torchmetrics==1.6.2
 torchsampler==0.1.2
 lightning==2.5.0.post0
-
-#Tensor ecosystem
-tensorflow==2.19.0
 tensorboard==2.19.0
-protobuf==4.23.4
 
 onnx==1.17.0
 onnxruntime-gpu==1.21.0
@@ -18,7 +14,6 @@ hydra-colorlog==1.2.0
 hydra-optuna-sweeper==1.2.0
 
 scikit-learn==1.6.1
-scikit-image==0.19.0
 opencv-python==4.9.0.80
 numpy==1.26.4
 pandas==2.2.3

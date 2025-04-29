@@ -1,12 +1,17 @@
 ## 0. Repository setup
 On top of setting up the repository, you will also need the following CUDA requirements if you want to utilize the graphics card in inference and training:
-1. CUDA Toolkit 12.8
+1. CUDA Toolkit 12.x
 2. cuDNN 9.x
 3. PATH fully set up
 4. NVIDIA graphics card drivers
 
-**IMPORTANT NOTE**: We have a `.devcontainer` set-up! This will do all the necessary setup in terms of virtual environment, VSCode extensions, dependencies and so on. We highly recommend you use this way of working with the repository, as it streamlines every step which will be described in the following sections. You do need `Docker Desktop` for this, so keep that in mind. This is in the cases when you're running VSCode, this allows for extremely easy integration.
+There are two approaches to running this project:
+1. Use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup).
+2. Create a virtual environment locally
 
+The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu). This is in the cases when you're running VSCode, as this allows for extremely easy integration. If you have a lower amount of RAM (under 16 GB), this might not work well, so resort to building the environment locally. Also important to note that if you're running a GPU setup with no NVIDIA card, it might not build (check the comment in `.devcontainer/devcontainer.json` for the fix).
+
+The second option (creating virutal env locally) requires a few steps, it will be described in the following chapter.
 ### 0.1. Virtual environment setup
 We will use virtual environments as it is more reliable for testing.
 Creating a virtual environment requires a certain version of Python, we'll work with 3.10.
@@ -41,7 +46,7 @@ source venv/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu126 -r requirements/requirements_train.txt
 ```
 
-*Optional*: If you only want to run the models in inference, do:
+*Optional*: If you only want to run the models in inference (using the `inference/predict.py` script), do:
 ```bash
 pip install -r requirements/requirements_inference.txt
 ```
@@ -67,6 +72,14 @@ I suggest installing the following extensions, and configuring them in the setti
 - vscode-pdf for easier viewing of `.pdf` files.
 
 This ensures there's no need to run pre-commit each time (the linting happens automatically most of the time, because of the extensions), consequently making the code versioning part a little less daunting.
+
+### 0.4. Notebooks for Exploration and Visualization
+All the development and exploration notebooks have been moved to Google Colab for easier access.
+
+You can access them here:
+[📓 Open Notebooks Folder](https://drive.google.com/drive/folders/1V9zt9TOl94Q9HRKKbFNkbee14Y2-csFm?usp=sharing)
+
+*Tip*: Right-click on any notebook in the folder and select "Open with > Google Colab" to start experimenting immediately! This keeps the repository clean and makes it easier for collaborators to run notebooks without setting up the environment locally.
 
 
 ## 1. Training pipeline
@@ -257,47 +270,79 @@ The inference script takes models from the default `models/` folder, and the ima
 
 ### 2.1. Download the models
 You can download the released models using the `download_models.py` script:
-
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v1.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
 --download-dir downloads/ \
 --extract-dir models/
 ```
 
 ### 2.2. Running the inference script
 ```bash
-usage: inference.py [-h] --input-folder INPUT_FOLDER [--models-folder MODELS_FOLDER] [--output-csv OUTPUT_CSV] [--save-tiles-folder SAVE_TILES_FOLDER]
-                    [--soft-vote]
+usage: predict.py [-h] [--models-folder MODELS_FOLDER] [--save-tiles-folder SAVE_TILES_FOLDER] input_folder output_csv
 
 ONNX Model Inference with Majority Voting
 
+positional arguments:
+  input_folder          Folder containing input images
+  output_csv            Path to save the output CSV
+
 options:
   -h, --help            show this help message and exit
-  --input-folder INPUT_FOLDER
-                        Folder containing input images
   --models-folder MODELS_FOLDER
                         Folder containing ONNX models
-  --output-csv OUTPUT_CSV
-                        Path to save the output CSV
   --save-tiles-folder SAVE_TILES_FOLDER
                         Folder to save preprocessed image tiles
-  --soft-vote           Use soft voting for predictions
 ```
 
 Example script run, assuming the images are inside the `data/test/` folder:
-
 ```bash
-python inference/inference.py \
---input-folder data/test/ \
---models-folder models/ \
---output-csv results/inference_results.csv \
---soft-vote
+python inference/predict.py data/test/ results/output_csv.csv
 ```
+
+*Note*: If you do not have CUDA requirements highlighted in this README, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
 
 ## 3. Running the Streamlit app locally
 The streamlit app can be run locally, if you choose to iterate over it, this is done by the following command:
 ```bash
 streamlit run app/streamlit_app.py
+```
+
+## 4. Segmentation and skin color estimation
+### 4.1. Preparing the environment
+To run segmentation of lesions, first use the following commands to create a new virtual environment (this is because Tensorflow and PyTorch have some weird CUDA conflicts):
+- Windows (cmd):
+```bash
+python3 -m venv segmentation-venv
+segmentation-venv\Scripts\activate
+```
+- Windows (PowerShell):
+```bash
+python3 -m venv segmentation-venv
+segmentation-venv\Scripts\Activate.ps1
+```
+- Windows (Git Bash):
+```bash
+python -m venv segmentation-venv
+source segmentation-venv/Scripts/activate
+```
+- Linux/macOS:
+```bash
+python -m venv segmentation-venv
+source segmentation-venv/bin/activate
+```
+And then install the requirements:
+```bash
+pip install -r requirements/requirements_segmentation.txt
+```
+
+### 4.2. Running the segmentation script
+Example run of the segmentation script which will result in a `.csv` file from which you can get the skin color information.
+```bash
+python training/src/train_utils/segmentation/segmentation_skin_color_analysis.py \
+--csv-path data/get_data/merged_labels.csv \
+--images-dir data/get_data/images/ \
+--masks-dir data/segmentation_masks/ \
+--csv-out-path results/skin_color_estimates.csv
 ```

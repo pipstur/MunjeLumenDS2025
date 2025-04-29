@@ -166,7 +166,9 @@ def standard_split(
     print("Dataset split complete.")
 
 
-def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> None:
+def kfold_split(
+    dataset_dir: str, output_dir: str, n_splits: int, seed: int, test_size: float
+) -> None:
     """
     Perform initial 90/10 train/test split, then Stratified K-Fold (train/val) on train data.
 
@@ -187,7 +189,7 @@ def kfold_split(dataset_dir: str, output_dir: str, n_splits: int, seed: int) -> 
     df = pd.DataFrame(df, columns=["image_name", "label"])
 
     train_val_df, test_df = train_test_split(
-        df, test_size=0.1, stratify=df["label"], random_state=seed
+        df, test_size=test_size, stratify=df["label"], random_state=seed
     )
 
     print(f"Initial split: {len(train_val_df)} train_val, {len(test_df)} test")
@@ -264,7 +266,7 @@ def cli():
         "--val-split", type=float, default=0.2, help="Fraction of data for validation."
     )
     parser.add_argument(
-        "--test-split", type=float, default=0.2, help="Fraction of data for testing."
+        "--test-split", type=float, default=0.1, help="Fraction of data for testing."
     )
     parser.add_argument("--seed", type=int, default=27, help="Random seed for dataset split.")
     parser.add_argument(
@@ -325,7 +327,9 @@ def main():
             args.seed,
         )
     elif args.kfold:
-        kfold_split(args.output_dir, args.output_dir, args.kfold, args.seed)
+        kfold_split(args.output_dir, args.output_dir, args.kfold, args.seed, args.test_split)
+    else:
+        raise ValueError("Invalid split type. Choose 'train', 'kfold', or 'train-val-test'.")
 
 
 if __name__ == "__main__":
