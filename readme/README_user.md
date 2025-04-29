@@ -270,7 +270,6 @@ The inference script takes models from the default `models/` folder, and the ima
 
 ### 2.1. Download the models
 You can download the released models using the `download_models.py` script:
-
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
@@ -281,26 +280,23 @@ python models/download_models.py \
 
 ### 2.2. Running the inference script
 ```bash
-usage: inference.py [-h] --input-folder INPUT_FOLDER [--models-folder MODELS_FOLDER] [--output-csv OUTPUT_CSV] [--save-tiles-folder SAVE_TILES_FOLDER]
-                    [--soft-vote]
+usage: predict.py [-h] [--models-folder MODELS_FOLDER] [--save-tiles-folder SAVE_TILES_FOLDER] input_folder output_csv
 
 ONNX Model Inference with Majority Voting
 
+positional arguments:
+  input_folder          Folder containing input images
+  output_csv            Path to save the output CSV
+
 options:
   -h, --help            show this help message and exit
-  --input-folder INPUT_FOLDER
-                        Folder containing input images
   --models-folder MODELS_FOLDER
                         Folder containing ONNX models
-  --output-csv OUTPUT_CSV
-                        Path to save the output CSV
   --save-tiles-folder SAVE_TILES_FOLDER
                         Folder to save preprocessed image tiles
-  --soft-vote           Use soft voting for predictions
 ```
 
 Example script run, assuming the images are inside the `data/test/` folder:
-
 ```bash
 python inference/predict.py data/test/ results/output_csv.csv
 ```

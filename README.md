@@ -25,12 +25,27 @@ git clone https://github.com/pipstur/MunjeLumenDS2025.git
 The infrastructure is hosted on the streamlit platform on this [URL](https://melanomdetection.streamlit.app/), and single image inferencing can be done there. The current best models are deployed there.
 
 ## How it works
+### Training and testing pipeline
+1. Preprocessing
+    - For training, the models use a dataset which is a combination of ISIC 2019 and ISIC 2020 datasets.
+    - In preprocessing, the images are put through resizing, padding and CLAHE (Contrast Limited Adaptive Histogram Equalization).
+2. Data splitting
+    - The dataset is divided into a training set, and an independent test set.
+    - The training dataset is split into 5 folds.
+3. Model Training
+    - Data augmentation is applied in training.
+    - ShuffleNetV2 and MobileNetV3 architectures are trained on all 5 fold combinations.
+    - Each combination yields one model, which is used in the final ensemble, during the inferencing.
+
+![Training and Testing Pipeline Diagram](https://i.imgur.com/lUQvCmQ.png)
+
+### Inferencing pipeline
 1. Preprocess an image using resizing, padding and CLAHE.
 2. Inferencing through an ensemble of lightweight neural networks (SqueezeNet1.1, ShuffleNetV2, MobileNetV3).
 3. Final prediction using averaging of confidence scores.
 4. Deployement on Streamlit cloud, or local inference possibility.
 
-![Pipeline Diagram](https://i.imgur.com/fwXLSO4.png)
+![Inference Pipeline Diagram](https://i.imgur.com/fwXLSO4.png)
 
 ## Other README files
 Consult the `readme/` folder for other information about the repository, such as:
