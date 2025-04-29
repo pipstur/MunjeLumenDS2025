@@ -4,7 +4,7 @@ There are two approaches to running this project:
 1. Use the `.devcontainer` to use the repository (which will handle all of the repository, environment and requirements setup).
 2. Create a virtual environment locally
 
-The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu).
+The first option is done automatically, Visual Studio Code will automatically detect the `devctontainer.json` file and give you an option to run inside it. This requires you have `Docker` on your system, as well as some sort of Ubuntu distro (e.g. Windows: WSL Ubuntu). The setup may fail on some systems, so rely on the native environment setup in those cases.
 
 The second option (creating virutal env locally) requires a few steps:
 1. To create and activate a virtual environment run the following, based on your operating system:
@@ -56,7 +56,7 @@ python models/download_models.py \
 
 Example script run, assuming the images are inside the `data/test/` folder:
 ```bash
-python inference/predict.py data/inference_test/ results/output_csv.csv
+python inference/predict.py data/test/ results/output_csv.csv
 ```
 
 *Note*: If you do not have CUDA requirements highlighted in the `README_user.md`, you the `onnx-runtime` library will resort back to CPU inference. It will still run, but there will be warnings for each of the models, and the inference will be much slower.
