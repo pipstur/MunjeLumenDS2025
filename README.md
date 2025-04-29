@@ -45,16 +45,17 @@ The infrastructure is hosted on the streamlit platform on this [URL](https://mel
 3. Final prediction using averaging of confidence scores.
 4. Deployement on Streamlit cloud, or local inference possibility.
 
-![Inference Pipeline Diagram](https://i.imgur.com/fwXLSO4.png)
+![Inference Pipeline Diagram](https://i.imgur.com/nXO1dce.png)
 
 ## Other README files
 Consult the `readme/` folder for other information about the repository, such as:
 - Setting up the environment
 - Developer rules for git flow
 - Getting the data
-- Generating datasets for training
+- Generating datasets for training/testing/validation
 - Training the models
 - Evaluating the models
+- Getting `.onxx` models for inferencing
 - Running inference using `onnx-runtime`
 - Access to notebooks for exploration and visualization
 - etc.
