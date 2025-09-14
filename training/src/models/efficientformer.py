@@ -21,7 +21,7 @@ class EfficientFormer(Model):
         self.criterion = get_loss_function(loss_function)
 
         # Use num_classes=0 to remove the default classifier
-        backbone = timm.create_model("efficientformer_l1", pretrained=True, num_classes=0)
+        backbone = timm.create_model("efficientformerv2_s0", pretrained=True, num_classes=0)
         num_filters = backbone.num_features
 
         self.feature_extractor = backbone
