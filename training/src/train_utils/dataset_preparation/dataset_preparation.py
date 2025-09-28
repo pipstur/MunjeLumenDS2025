@@ -19,7 +19,7 @@ from PIL import Image
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from tqdm import tqdm
 
-from img_utils.preprocessing import apply_clahe, remove_hair, resize_image
+from img_utils.preprocessing import apply_clahe, remove_hair_frangi, resize_image
 
 
 def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]):
@@ -32,7 +32,7 @@ def preprocess_image(args: Tuple[Image.Image, Tuple[int, int], bool, bool, bool]
     if apply_clahe_flag:
         image = apply_clahe(image, 1.4, (8, 8))
     if remove_hair_flag:
-        image = remove_hair(image)
+        image = remove_hair_frangi(image)
 
     return image
 
