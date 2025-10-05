@@ -30,11 +30,12 @@ CLAHE_TILE_GRID_SIZE = (8, 8)
 def load_onnx_models(models_folder: str) -> List[ort.InferenceSession]:
     """Load ONNX models from a given folder."""
     sessions = []
-    for model_name in os.listdir(models_folder):
-        if model_name.endswith(".onnx"):
-            model_path = os.path.join(models_folder, model_name)
-            session = ort.InferenceSession(model_path, providers=PROVIDERS)
-            sessions.append(session)
+    for root, _, files in os.walk(models_folder):
+        for file in files:
+            if file.endswith(".onnx"):
+                model_path = os.path.join(root, file)
+                session = ort.InferenceSession(model_path, providers=PROVIDERS)
+                sessions.append(session)
     return sessions
 
 
@@ -44,7 +45,8 @@ def preprocess_image(
     """Preprocess the input image: resize and apply CLAHE."""
     image = Image.open(image_path).convert("RGB")
     image = resize_image(image, image_size, padding)
-    return apply_clahe(image, clip_limit=CLAHE_CLIP_LIMIT, tile_grid_size=CLAHE_TILE_GRID_SIZE)
+    image = apply_clahe(image, clip_limit=CLAHE_CLIP_LIMIT, tile_grid_size=CLAHE_TILE_GRID_SIZE)
+    return image
 
 
 def save_preprocessed_image(
@@ -103,6 +105,7 @@ def main(input_folder, models_folder, output_csv, save_tiles_folder=None):
         print("No ONNX models found in the models folder.")
         return
 
+    print(f"Loaded {len(sessions)} models.")
     image_paths = [
         os.path.join(input_folder, fname)
         for fname in os.listdir(input_folder)

@@ -1,6 +1,6 @@
 import torch
+from timm import create_model
 from torch import nn
-from torchvision.models import ShuffleNet_V2_X1_0_Weights, shufflenet_v2_x1_0
 
 from training.src.models.components.loss_functions import get_loss_function
 from training.src.models.components.model_class import Model
@@ -8,21 +8,7 @@ from training.src.models.components.model_class import Model
 torch.use_deterministic_algorithms(True, warn_only=True)
 
 
-class ShuffleNetV2(Model):
-    """Implementation of LightningModule.
-
-    A LightningModule organizes your PyTorch code into 6 sections:
-        - Computations (init)
-        - Train loop (training_step)
-        - Validation loop (validation_step)
-        - Test loop (test_step)
-        - Prediction Loop (predict_step)
-        - Optimizers and LR Schedulers (configure_optimizers)
-
-    Docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
-    """
-
+class MobileViT(Model):
     def __init__(
         self,
         optimizer: torch.optim.Optimizer,
@@ -34,8 +20,11 @@ class ShuffleNetV2(Model):
 
         self.criterion = get_loss_function(loss_function)
 
-        backbone = shufflenet_v2_x1_0(weights=ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1)
-        num_filters = backbone.fc.in_features
+        backbone = create_model(
+            "mobilevit_s", pretrained=True, num_classes=0
+        )  # num_classes=0 to get features only
+
+        num_filters = backbone.head.in_features
 
         self.feature_extractor = nn.Sequential(*list(backbone.children())[:-1])
 
@@ -43,6 +32,7 @@ class ShuffleNetV2(Model):
             for param in self.feature_extractor.parameters():
                 param.requires_grad = False
 
+        # Replace classifier to fit your num_classes
         self.classifier = nn.Linear(num_filters, self.num_classes)
 
 
@@ -52,5 +42,5 @@ if __name__ == "__main__":
     import pyrootutils
 
     root = pyrootutils.setup_root(__file__, pythonpath=True)
-    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "shufflenetv2.yaml")
+    cfg = omegaconf.OmegaConf.load(root / "configs" / "model" / "mobilevit.yaml")
     _ = hydra.utils.instantiate(cfg)

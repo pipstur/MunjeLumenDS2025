@@ -265,6 +265,36 @@ python training/src/eval/eval.py ckpt_path=training/logs/train/runs/run/checkpoi
 ```
 - Note: The model to which the checkpoint is pointing to, and the model passed to the `model=` parameter must be the same.
 
+### 1.4. Tensorboard dashboard for experiment tracking, visualization generation
+Experiment tracking is done through the reading of tensorboard files which are generated upon training and evaluation.
+
+#### 1.4.1. Tensorboard dashboard
+An example of opening a dashboard for seeing the results of training.
+```bash
+tensorboard --logdir training/logs/train/runs/
+```
+Or for evaluation.
+```bash
+tensorboard --logdir training/logs/eval/runs/
+```
+
+#### 1.4.2. Visualization script
+Alternatively, you could run the script for visualizing experiments as images, which look better. Currently this is only implemented for K-fold trainings.
+```bash
+usage: visualize_model_metrics.py [-h] --input-dir INPUT_DIR --output-dir OUTPUT_DIR [--folds FOLDS] [--metric-tags METRIC_TAGS [METRIC_TAGS ...]]
+
+options:
+  -h, --help            show this help message and exit
+  --input-dir INPUT_DIR
+  --output-dir OUTPUT_DIR
+  --folds FOLDS
+  --metric-tags METRIC_TAGS [METRIC_TAGS ...]
+```
+An example of running the script is shown below.
+```bash
+
+```
+
 ## 2. Inference script
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
 
@@ -273,7 +303,7 @@ You can download the released models using the `download_models.py` script:
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v3.0.0 \
 --download-dir downloads/ \
 --extract-dir models/
 ```

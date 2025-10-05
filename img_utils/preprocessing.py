@@ -3,6 +3,7 @@ from typing import Tuple
 import cv2
 import numpy as np
 from PIL import Image
+from skimage.filters import frangi
 
 
 def resize_image(
@@ -105,5 +106,26 @@ def remove_hair(
     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
     blurred = cv2.GaussianBlur(blackhat, blur_size, 0)
     _, mask = cv2.threshold(blurred, threshold, 255, cv2.THRESH_BINARY)
+    cleaned = cv2.inpaint(image_np, mask, inpaint_radius, inpaint_method)
+    return Image.fromarray(cleaned)
+
+
+def remove_hair_frangi(
+    image: Image.Image,
+    inpaint_radius: int = 3,
+    inpaint_method: int = cv2.INPAINT_TELEA,
+    threshold: int = 0.1,
+) -> Image.Image:
+    """
+    Hair removal using Frangi filter for vessel-like (hair) detection.
+    """
+    image_np = np.array(image)
+    gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
+
+    frangi_response = frangi(gray)
+    frangi_norm = (frangi_response * 255 / frangi_response.max()).astype(np.uint8)
+
+    _, mask = cv2.threshold(frangi_norm, int(threshold * 255), 255, cv2.THRESH_BINARY)
+
     cleaned = cv2.inpaint(image_np, mask, inpaint_radius, inpaint_method)
     return Image.fromarray(cleaned)
