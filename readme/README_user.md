@@ -299,13 +299,13 @@ An example of running the script is shown below.
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `results.csv` file as described in the competition specifications.
 
 ### 2.1. Download the models
-You can download the released models using the `download_models.py` script:
+You can download the released models using the `download_models.py` script (though the latest released ones are included in the repo):
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
 --repo-name MunjeLumenDS2025 --release-tag v3.0.0 \
 --download-dir downloads/ \
---extract-dir models/
+--extract-dir models/v3.0.0/
 ```
 
 ### 2.2. Running the inference script

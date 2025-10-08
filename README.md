@@ -34,18 +34,18 @@ The infrastructure is hosted on the streamlit platform on this [URL](https://mel
     - The training dataset is split into 5 folds.
 3. Model Training
     - Data augmentation is applied in training.
-    - ShuffleNetV2 and MobileNetV3 architectures are trained on all 5 fold combinations.
-    - Each combination yields one model, which is used in the final ensemble, during the inferencing.
+    - MobileNetV3 and EfficientFormerV2 architectures are trained on all 5 fold combinations.
+    - Each combination yields 5 models, which are used in the final ensemble, during the inferencing.
 
-![Training and Testing Pipeline Diagram](https://i.imgur.com/lUQvCmQ.png)
+![Training and Testing Pipeline Diagram](https://i.imgur.com/z8f0V8D.png)
 
 ### Inferencing pipeline
 1. Preprocess an image using resizing, padding and CLAHE.
-2. Inferencing through an ensemble of lightweight neural networks (SqueezeNet1.1, ShuffleNetV2, MobileNetV3).
+2. Inferencing through an ensemble of lightweight neural networks (MobileNetV3, EfficientFormerV2).
 3. Final prediction using averaging of confidence scores.
 4. Deployement on Streamlit cloud, or local inference possibility.
 
-![Inference Pipeline Diagram](https://i.imgur.com/nXO1dce.png)
+![Inference Pipeline Diagram](https://i.imgur.com/3rTExgB.png)
 
 ## Other README files
 Consult the `readme/` folder for other information about the repository, such as:
