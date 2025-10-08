@@ -45,16 +45,18 @@ pip install -r requirements/requirements_inference.txt
 ## Inference script
 The inference script takes models from the default `models/` folder, and the images from the assigned folder, does the inferencing on each image, aggregating the results from all of the models present in the folder and outputs a `output_csv.csv` file as described in the competition specifications.
 
-You can download the released models using the `download_models.py` script:
+*Note*: The latest models are already in the `included_models` folder when you pull the repository. If you want to pull an older release (or v2.0.0, v1.0.0), you can do so with the following instructions.
+
+You can download the latest released models using the `download_models.py` script:
 ```bash
 python models/download_models.py \
 --repo-owner pipstur \
---repo-name MunjeLumenDS2025 --release-tag v2.0.0 \
+--repo-name MunjeLumenDS2025 --release-tag v3.0.0 \
 --download-dir downloads/ \
---extract-dir models/
+--extract-dir models/v3.0.0/
 ```
 
-Example script run, assuming the images are inside the `data/test/` folder:
+To do inferencing, we can execute the `inference/predict.py` script. Example script run, assuming the images are inside the `data/test/` folder:
 ```bash
 python inference/predict.py data/test/ results/output_csv.csv
 ```

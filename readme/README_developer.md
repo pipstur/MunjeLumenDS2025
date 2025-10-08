@@ -44,4 +44,4 @@ General adding, committing tips:
 - Use `git tree` to see what branch you're checked out to (as well as the commit history), so there is no mixup to what branch it's being committed to.
 
 
-The developer can continue to the `README_user.md` file for more information on environment setup, training, evaluation etc.
+The developer can continue to the `readme/README_user.md` file for more information on environment setup, training, evaluation etc.
