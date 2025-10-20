@@ -127,7 +127,7 @@ class Model(LightningModule):
         self.train_recall(preds, targets)
         self.train_precision(preds, targets)
         self.train_f1(preds, targets)
-        self.train_roc_auc(preds, targets)
+        self.train_roc_auc(probs, targets)
         self.train_auprc(probs, targets)
 
         self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -158,7 +158,7 @@ class Model(LightningModule):
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
         self.val_f1(preds, targets)
-        self.val_roc_auc(preds, targets)
+        self.val_roc_auc(probs, targets)
         self.val_auprc(probs, targets)
 
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -188,7 +188,7 @@ class Model(LightningModule):
         self.test_precision(preds, targets)
         self.test_f1(preds, targets)
         self.con_mat(preds, targets)
-        self.test_roc_auc(preds, targets)
+        self.test_roc_auc(probs, targets)
         self.test_auprc(probs, targets)
 
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
