@@ -99,14 +99,14 @@ def main():
     st.image(
         REFERENCE_IMAGE_URL,
         caption="How to notice early signs of Melanoma",
-        use_container_width=True,
+        width="content",
     )
 
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
     if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.image(image, caption="Uploaded Image", width="content")
 
         sessions = load_onnx_models(MODEL_FOLDER)
 
